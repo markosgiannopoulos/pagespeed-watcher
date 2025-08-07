@@ -2,6 +2,7 @@
   "name": "apogee/laravel-pagespeed-watcher",
   "description": "PageSpeed Watcher: A Laravel package to run Google PageSpeed Insights (PSI) checks for your app's pages.",
   "type": "library",
+  "version": "0.1.1",
   "license": "MIT",
   "keywords": [
     "laravel",
@@ -19,16 +20,16 @@
   "require": {
     "php": "^8.2",
     "illuminate/support": "^11.0|^12.0|^13.0",
-    "illuminate/console": "^11.0",
+    "illuminate/console": "^11.0|^12.0|^13.0",
     "guzzlehttp/guzzle": "^7.9",
     "symfony/dom-crawler": "^7.0",
     "symfony/css-selector": "^7.0"
   },
   "require-dev": {
-    "orchestra/testbench": "^9.0",
+    "orchestra/testbench": "^9.0|^10.0",
     "phpunit/phpunit": "^10.5",
     "mockery/mockery": "^1.6",
-    "orchestra/testbench-core": "^9.0"
+    "orchestra/testbench-core": "^9.0|^10.0"
   },
   "autoload": {
     "psr-4": {
