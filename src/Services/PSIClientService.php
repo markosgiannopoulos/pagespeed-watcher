@@ -254,6 +254,8 @@ class PSIClientService
             
             if ($e instanceof MissingApiKeyException) {
                 $httpCode = 401;
+            } elseif ($e instanceof InvalidArgumentException) {
+                $httpCode = 400;
             } elseif (str_contains($error, '429')) {
                 $httpCode = 429;
             } elseif (str_contains($error, '5xx')) {
