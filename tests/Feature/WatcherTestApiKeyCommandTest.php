@@ -41,6 +41,46 @@ class WatcherTestApiKeyCommandTest extends TestCase
             ->assertExitCode(0);
     }
 
+    public function test_command_with_detailed_lighthouse_response(): void
+    {
+        $fake = new class(new \GuzzleHttp\Client(), 'test_key') extends PSIClientService {
+            public function __construct($client, $key) { parent::__construct($client, $key); }
+            public function runTest(string $url, string $strategy = 'mobile'): array {
+                return [
+                    'lighthouseResult' => [
+                        'categories' => [
+                            'performance' => ['score' => 0.91],
+                        ],
+                        'audits' => [
+                            'largest-contentful-paint' => ['numericValue' => 1800],
+                            'interaction-to-next-paint' => ['numericValue' => 120],
+                            'cumulative-layout-shift' => ['numericValue' => 0.03],
+                        ],
+                    ],
+                ];
+            }
+            
+            public function testApiKey(string $url, string $strategy = 'mobile'): array {
+                $response = $this->runTest($url, $strategy);
+                $metrics = $this->extractCoreMetrics($response);
+                $score = isset($metrics['score']) ? (int) round($metrics['score'] * 100) : null;
+                
+                return [
+                    'http_code' => 200,
+                    'score' => $score,
+                    'error' => null,
+                ];
+            }
+        };
+
+        $this->app->instance(PSIClientService::class, $fake);
+
+        $this->artisan('watcher:test-api-key')
+            ->expectsOutputToContain('HTTP Code: 200')
+            ->expectsOutputToContain('Performance Score: 91')
+            ->assertExitCode(0);
+    }
+
     public function test_command_with_desktop_strategy(): void
     {
         $fake = new class(new \GuzzleHttp\Client(), 'test_key') extends PSIClientService {
@@ -97,6 +137,46 @@ class WatcherTestApiKeyCommandTest extends TestCase
                 return [
                     'http_code' => 200,
                     'score' => 45,
+                    'error' => null,
+                ];
+            }
+        };
+
+        $this->app->instance(PSIClientService::class, $fake);
+
+        $this->artisan('watcher:test-api-key')
+            ->expectsOutputToContain('HTTP Code: 200')
+            ->expectsOutputToContain('Performance Score: 45')
+            ->assertExitCode(0);
+    }
+
+    public function test_command_with_poor_performance_detailed_metrics(): void
+    {
+        $fake = new class(new \GuzzleHttp\Client(), 'test_key') extends PSIClientService {
+            public function __construct($client, $key) { parent::__construct($client, $key); }
+            public function runTest(string $url, string $strategy = 'mobile'): array {
+                return [
+                    'lighthouseResult' => [
+                        'categories' => [
+                            'performance' => ['score' => 0.45],
+                        ],
+                        'audits' => [
+                            'largest-contentful-paint' => ['numericValue' => 3500],
+                            'interaction-to-next-paint' => ['numericValue' => 300],
+                            'cumulative-layout-shift' => ['numericValue' => 0.15],
+                        ],
+                    ],
+                ];
+            }
+            
+            public function testApiKey(string $url, string $strategy = 'mobile'): array {
+                $response = $this->runTest($url, $strategy);
+                $metrics = $this->extractCoreMetrics($response);
+                $score = isset($metrics['score']) ? (int) round($metrics['score'] * 100) : null;
+                
+                return [
+                    'http_code' => 200,
+                    'score' => $score,
                     'error' => null,
                 ];
             }
