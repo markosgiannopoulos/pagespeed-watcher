@@ -76,7 +76,10 @@ class WatcherTestApiKeyCommandTest extends TestCase
     public function test_command_with_detailed_lighthouse_response(): void
     {
         $fake = new class(new \GuzzleHttp\Client(), 'test_key') extends PSIClientService {
-            public function __construct($client, $key) { parent::__construct($client, $key); }
+            public function __construct($client, $key) { 
+                $rateLimitService = new \Apogee\Watcher\Services\RateLimitService();
+                parent::__construct($client, $key, $rateLimitService); 
+            }
             public function runTest(string $url, string $strategy = 'mobile'): array {
                 return [
                     'lighthouseResult' => [
@@ -116,7 +119,10 @@ class WatcherTestApiKeyCommandTest extends TestCase
     public function test_command_with_desktop_strategy(): void
     {
         $fake = new class(new \GuzzleHttp\Client(), 'test_key') extends PSIClientService {
-            public function __construct($client, $key) { parent::__construct($client, $key); }
+            public function __construct($client, $key) { 
+                $rateLimitService = new \Apogee\Watcher\Services\RateLimitService();
+                parent::__construct($client, $key, $rateLimitService); 
+            }
             /** @SuppressWarnings("UnusedFormalParameter") */
             public function testApiKey(string $url, string $strategy = 'mobile'): array {
                 return [
@@ -141,7 +147,10 @@ class WatcherTestApiKeyCommandTest extends TestCase
         $this->app['config']->set('watcher.psi_api_key', null);
 
         $fake = new class(new \GuzzleHttp\Client(), null) extends PSIClientService {
-            public function __construct($client, $key) { parent::__construct($client, $key); }
+            public function __construct($client, $key) { 
+                $rateLimitService = new \Apogee\Watcher\Services\RateLimitService();
+                parent::__construct($client, $key, $rateLimitService); 
+            }
             /** @SuppressWarnings("UnusedFormalParameter") */
             public function testApiKey(string $url, string $strategy = 'mobile'): array {
                 return [
@@ -163,7 +172,10 @@ class WatcherTestApiKeyCommandTest extends TestCase
     public function test_command_with_poor_performance(): void
     {
         $fake = new class(new \GuzzleHttp\Client(), 'test_key') extends PSIClientService {
-            public function __construct($client, $key) { parent::__construct($client, $key); }
+            public function __construct($client, $key) { 
+                $rateLimitService = new \Apogee\Watcher\Services\RateLimitService();
+                parent::__construct($client, $key, $rateLimitService); 
+            }
             /** @SuppressWarnings("UnusedFormalParameter") */
             public function testApiKey(string $url, string $strategy = 'mobile'): array {
                 return [
@@ -185,7 +197,10 @@ class WatcherTestApiKeyCommandTest extends TestCase
     public function test_command_with_poor_performance_detailed_metrics(): void
     {
         $fake = new class(new \GuzzleHttp\Client(), 'test_key') extends PSIClientService {
-            public function __construct($client, $key) { parent::__construct($client, $key); }
+            public function __construct($client, $key) { 
+                $rateLimitService = new \Apogee\Watcher\Services\RateLimitService();
+                parent::__construct($client, $key, $rateLimitService); 
+            }
             public function runTest(string $url, string $strategy = 'mobile'): array {
                 return [
                     'lighthouseResult' => [
@@ -225,7 +240,10 @@ class WatcherTestApiKeyCommandTest extends TestCase
     public function test_command_with_api_error(): void
     {
         $fake = new class(new \GuzzleHttp\Client(), 'test_key') extends PSIClientService {
-            public function __construct($client, $key) { parent::__construct($client, $key); }
+            public function __construct($client, $key) { 
+                $rateLimitService = new \Apogee\Watcher\Services\RateLimitService();
+                parent::__construct($client, $key, $rateLimitService); 
+            }
             /** @SuppressWarnings("UnusedFormalParameter") */
             public function testApiKey(string $url, string $strategy = 'mobile'): array {
                 return [
@@ -267,7 +285,10 @@ class WatcherTestApiKeyCommandTest extends TestCase
     public function test_command_with_rate_limit_error(): void
     {
         $fake = new class(new \GuzzleHttp\Client(), 'test_key') extends PSIClientService {
-            public function __construct($client, $key) { parent::__construct($client, $key); }
+            public function __construct($client, $key) { 
+                $rateLimitService = new \Apogee\Watcher\Services\RateLimitService();
+                parent::__construct($client, $key, $rateLimitService); 
+            }
             /** @SuppressWarnings("UnusedFormalParameter") */
             public function testApiKey(string $url, string $strategy = 'mobile'): array {
                 return [
@@ -289,7 +310,10 @@ class WatcherTestApiKeyCommandTest extends TestCase
     public function test_command_with_server_error(): void
     {
         $fake = new class(new \GuzzleHttp\Client(), 'test_key') extends PSIClientService {
-            public function __construct($client, $key) { parent::__construct($client, $key); }
+            public function __construct($client, $key) { 
+                $rateLimitService = new \Apogee\Watcher\Services\RateLimitService();
+                parent::__construct($client, $key, $rateLimitService); 
+            }
             /** @SuppressWarnings("UnusedFormalParameter") */
             public function testApiKey(string $url, string $strategy = 'mobile'): array {
                 return [

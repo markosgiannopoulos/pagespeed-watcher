@@ -22,6 +22,21 @@ class WatcherUsageCommandTest extends TestCase
     }
 
     /**
+     * Define the test environment.
+     * 
+     * Sets up the test environment with required configuration values.
+     * 
+     * @param mixed $app The application instance
+     */
+    protected function defineEnvironment($app)
+    {
+        $app['config']->set('watcher.psi_api_key', 'test_key');
+        $app['config']->set('app.url', 'https://example.com');
+        $app['config']->set('database.default', 'sqlite');
+        $app['config']->set('database.connections.sqlite.database', ':memory:');
+    }
+
+    /**
      * Set up the test environment.
      * 
      * Runs migrations to ensure the database schema is available for testing.
