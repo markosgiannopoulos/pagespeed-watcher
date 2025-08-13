@@ -88,6 +88,50 @@ class WatcherTestApiKeyCommandTest extends TestCase
             ->assertExitCode(1);
     }
 
+    public function test_command_with_poor_performance(): void
+    {
+        $fake = new class(new \GuzzleHttp\Client(), 'test_key') extends PSIClientService {
+            public function __construct($client, $key) { parent::__construct($client, $key); }
+            /** @SuppressWarnings("UnusedFormalParameter") */
+            public function testApiKey(string $url, string $strategy = 'mobile'): array {
+                return [
+                    'http_code' => 200,
+                    'score' => 45,
+                    'error' => null,
+                ];
+            }
+        };
+
+        $this->app->instance(PSIClientService::class, $fake);
+
+        $this->artisan('watcher:test-api-key')
+            ->expectsOutputToContain('HTTP Code: 200')
+            ->expectsOutputToContain('Performance Score: 45')
+            ->assertExitCode(0);
+    }
+
+    public function test_command_with_api_error(): void
+    {
+        $fake = new class(new \GuzzleHttp\Client(), 'test_key') extends PSIClientService {
+            public function __construct($client, $key) { parent::__construct($client, $key); }
+            /** @SuppressWarnings("UnusedFormalParameter") */
+            public function testApiKey(string $url, string $strategy = 'mobile'): array {
+                return [
+                    'http_code' => 400,
+                    'score' => null,
+                    'error' => 'Bad request: Invalid URL',
+                ];
+            }
+        };
+
+        $this->app->instance(PSIClientService::class, $fake);
+
+        $this->artisan('watcher:test-api-key')
+            ->expectsOutputToContain('HTTP Code: 400')
+            ->expectsOutputToContain('Error: Bad request: Invalid URL')
+            ->assertExitCode(1);
+    }
+
     public function test_command_without_app_url(): void
     {
         // Clear the app.url configuration completely
