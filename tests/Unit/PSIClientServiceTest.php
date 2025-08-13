@@ -30,7 +30,7 @@ class PSIClientServiceTest extends TestCase
 
         $rateLimitService = $this->createMock(RateLimitService::class);
         $rateLimitService->method('canMakeRequest')->willReturn(true);
-        $rateLimitService->method('recordRequest')->willReturn(null);
+        $rateLimitService->method('recordRequest')->willReturnCallback(function() {});
         
         $service = new PSIClientService($mockClient, 'test_key', $rateLimitService);
 
@@ -78,7 +78,7 @@ class PSIClientServiceTest extends TestCase
 
         $rateLimitService = $this->createMock(RateLimitService::class);
         $rateLimitService->method('canMakeRequest')->willReturn(true);
-        $rateLimitService->method('recordRequest')->willReturn(null);
+        $rateLimitService->method('recordRequest')->willReturnCallback(function() {});
         
         $service = new PSIClientService($mockClient, 'test_key', $rateLimitService);
 
@@ -107,7 +107,7 @@ class PSIClientServiceTest extends TestCase
 
         $rateLimitService = $this->createMock(RateLimitService::class);
         $rateLimitService->method('canMakeRequest')->willReturn(true);
-        $rateLimitService->method('recordRequest')->willReturn(null);
+        $rateLimitService->method('recordRequest')->willReturnCallback(function() {});
         
         $service = new PSIClientService($mockClient, 'test_key', $rateLimitService);
 

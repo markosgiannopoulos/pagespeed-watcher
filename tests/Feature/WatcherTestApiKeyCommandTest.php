@@ -329,14 +329,11 @@ class WatcherTestApiKeyCommandTest extends TestCase
      */
     public function test_command_without_app_url(): void
     {
-        // Clear the app.url configuration completely
-        $this->app['config']->set('app.url', '');
-        
-        // Also clear any environment variable that might be set
-        putenv('APP_URL');
+        // Set an invalid URL format to test URL validation
+        $this->app['config']->set('app.url', 'invalid-url');
 
         $this->artisan('watcher:test-api-key')
-            ->expectsOutputToContain('APP_URL is not set')
+            ->expectsOutputToContain('Invalid APP_URL format')
             ->assertExitCode(1);
     }
 

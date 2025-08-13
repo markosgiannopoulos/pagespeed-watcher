@@ -72,7 +72,7 @@ class WatcherUsageCommandTest extends TestCase
             ->expectsOutputToContain('Total Requests: 10')
             ->expectsOutputToContain('Successful: 8')
             ->expectsOutputToContain('Errors: 2')
-            ->expectsOutputToContain('Cost Estimate: $0.004')
+            ->expectsOutputToContain('Cost Estimate: $0.0040')
             ->assertExitCode(0);
     }
 
@@ -102,7 +102,7 @@ class WatcherUsageCommandTest extends TestCase
             ->expectsOutputToContain('Total Requests: 25')
             ->expectsOutputToContain('Successful: 20')
             ->expectsOutputToContain('Errors: 5')
-            ->expectsOutputToContain('Total Cost Estimate: $0.010')
+            ->expectsOutputToContain('Total Cost Estimate: $0.0100')
             ->assertExitCode(0);
     }
 }
