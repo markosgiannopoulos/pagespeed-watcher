@@ -6,13 +6,24 @@ use Illuminate\Support\ServiceProvider;
 use Apogee\Watcher\Console\Commands\WatcherTestApiKeyCommand;
 use Apogee\Watcher\Console\Commands\WatcherUsageCommand;
 use Apogee\Watcher\Services\PSIClientService;
+use Apogee\Watcher\Services\RateLimitService;
 use GuzzleHttp\Client as GuzzleClient;
 
 class WatcherServiceProvider extends ServiceProvider
 {
+    /**
+     * Register any application services.
+     * 
+     * This method is called during the service container binding phase.
+     * It registers the PSI client service and merges the package configuration.
+     */
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__ . '/../config/watcher.php', 'watcher');
+
+        $this->app->singleton(RateLimitService::class, function ($app) {
+            return new RateLimitService();
+        });
 
         $this->app->singleton(PSIClientService::class, function ($app) {
             $config = config('watcher.http_client', []);
@@ -25,10 +36,20 @@ class WatcherServiceProvider extends ServiceProvider
                 ],
             ]);
 
-            return new PSIClientService($guzzle, config('watcher.psi_api_key'));
+            return new PSIClientService(
+                $guzzle, 
+                config('watcher.psi_api_key'),
+                $app->make(RateLimitService::class)
+            );
         });
     }
 
+    /**
+     * Bootstrap any application services.
+     * 
+     * This method is called after all services are registered.
+     * It publishes configuration files, migrations, and registers console commands.
+     */
     public function boot(): void
     {
         // Publish configuration
@@ -58,6 +79,9 @@ class WatcherServiceProvider extends ServiceProvider
     
     /**
      * Validate the package configuration.
+     * 
+     * Checks for required configuration values and validates threshold settings.
+     * Logs warnings for missing API keys and throws exceptions for invalid thresholds.
      */
     private function validateConfiguration(): void
     {

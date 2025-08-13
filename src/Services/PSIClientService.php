@@ -4,8 +4,12 @@ namespace Apogee\Watcher\Services;
 
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\ServerException;
 use InvalidArgumentException;
 use Apogee\Watcher\Services\RateLimitService;
+use Apogee\Watcher\Models\WatcherApiUsage;
+use Apogee\Watcher\Exceptions\MissingApiKeyException;
 
 class PSIClientService
 {
@@ -19,22 +23,33 @@ class PSIClientService
 
     private const VALID_STRATEGIES = ['mobile', 'desktop'];
 
-    public function __construct(GuzzleClient $httpClient, ?string $apiKey)
+    /**
+     * Create a new PSI client service instance.
+     * 
+     * @param GuzzleClient $httpClient The HTTP client for making API requests
+     * @param string|null $apiKey The Google PageSpeed Insights API key
+     * @param RateLimitService $rateLimitService The rate limiting service
+     */
+    public function __construct(GuzzleClient $httpClient, ?string $apiKey, RateLimitService $rateLimitService)
     {
         $this->httpClient = $httpClient;
         $this->apiKey = $apiKey;
-        $this->rateLimitService = new RateLimitService();
+        $this->rateLimitService = $rateLimitService;
     }
 
     /**
-     * Run a PSI test for the given URL and strategy.
+     * Run a PageSpeed Insights test for the given URL and strategy.
+     * 
+     * Makes an API request to Google PageSpeed Insights and returns the raw response.
+     * This method handles error responses, rate limiting, and usage tracking.
      *
-     * @param string $url
-     * @param string $strategy "mobile" or "desktop"
-     * @return array Decoded JSON response
-     * @throws GuzzleException
-     * @throws InvalidArgumentException
-     * @throws \RuntimeException
+     * @param string $url The URL to test (must be a valid HTTP/HTTPS URL)
+     * @param string $strategy The testing strategy: "mobile" or "desktop"
+     * @return array The decoded JSON response from the PSI API
+     * @throws InvalidArgumentException When URL is invalid or strategy is unsupported
+     * @throws MissingApiKeyException When API key is not configured
+     * @throws \RuntimeException When API returns an error response
+     * @throws GuzzleException When HTTP request fails
      */
     public function runTest(string $url, string $strategy = 'mobile'): array
     {
@@ -51,6 +66,11 @@ class PSIClientService
             throw new InvalidArgumentException('Strategy must be "mobile" or "desktop"');
         }
 
+        // Check if API key is configured
+        if (empty($this->apiKey)) {
+            throw new MissingApiKeyException();
+        }
+
         // Check rate limits before making request
         if (!$this->rateLimitService->canMakeRequest()) {
             throw new \RuntimeException('Rate limit exceeded. Please try again later.');
@@ -62,51 +82,82 @@ class PSIClientService
             'category' => 'performance',
         ];
 
-        if (!empty($this->apiKey)) {
-            $query['key'] = $this->apiKey;
-        }
+        $query['key'] = $this->apiKey;
 
-        $response = $this->httpClient->request('GET', self::PSI_ENDPOINT, [
-            'query' => $query,
-            'http_errors' => true,
-        ]);
+        try {
+            $response = $this->httpClient->request('GET', self::PSI_ENDPOINT, [
+                'query' => $query,
+                'http_errors' => true,
+            ]);
 
-        $json = json_decode((string) $response->getBody(), true);
-        if (!is_array($json)) {
-            throw new \RuntimeException('Invalid JSON from PSI API');
-        }
-
-        if (isset($json['error'])) {
-            $message = $json['error']['message'] ?? 'Unknown PSI API error';
-            $code = $json['error']['code'] ?? 0;
-            
-            // Provide more specific error messages
-            switch ($code) {
-                case 400:
-                    throw new \RuntimeException("Bad request: {$message}");
-                case 403:
-                    throw new \RuntimeException("API key error: {$message}");
-                case 429:
-                    throw new \RuntimeException("Rate limit exceeded: {$message}");
-                default:
-                    throw new \RuntimeException("PSI API error ({$code}): {$message}");
+            $json = json_decode((string) $response->getBody(), true);
+            if (!is_array($json)) {
+                throw new \RuntimeException('Invalid JSON from PSI API');
             }
+
+            if (isset($json['error'])) {
+                $message = $json['error']['message'] ?? 'Unknown PSI API error';
+                $code = $json['error']['code'] ?? 0;
+                
+                // Record error in usage tracking
+                WatcherApiUsage::getTodayRecord()->incrementRequests(false);
+                
+                // Provide more specific error messages
+                switch ($code) {
+                    case 400:
+                        throw new \RuntimeException("Bad request: {$message}");
+                    case 403:
+                        throw new \RuntimeException("API key error: {$message}");
+                    case 429:
+                        throw new \RuntimeException("quota exceeded or rate limited (429)");
+                    default:
+                        throw new \RuntimeException("PSI API error ({$code}): {$message}");
+                }
+            }
+
+            // Record successful request for rate limiting and usage tracking
+            $this->rateLimitService->recordRequest();
+            WatcherApiUsage::getTodayRecord()->incrementRequests(true);
+
+            return $json;
+        } catch (ClientException $e) {
+            $statusCode = $e->getResponse()->getStatusCode();
+            
+            // Record error in usage tracking
+            WatcherApiUsage::getTodayRecord()->incrementRequests(false);
+            
+            if ($statusCode === 429) {
+                throw new \RuntimeException('quota exceeded or rate limited (429)');
+            }
+            
+            throw new \RuntimeException("PSI API error ({$statusCode}): " . $e->getMessage());
+        } catch (ServerException $e) {
+            // Record error in usage tracking
+            WatcherApiUsage::getTodayRecord()->incrementRequests(false);
+            
+            throw new \RuntimeException('PSI server error (5xx) — retry later');
+        } catch (GuzzleException $e) {
+            // Record error in usage tracking
+            WatcherApiUsage::getTodayRecord()->incrementRequests(false);
+            
+            throw $e;
         }
-
-        // Record successful request for rate limiting
-        $this->rateLimitService->recordRequest();
-
-        return $json;
     }
 
     /**
-     * Extract core metrics from a PSI response.
-     * - score: 0..1
-     * - lcp, inp in milliseconds
-     * - cls decimal (unitless)
+     * Extract core performance metrics from a PageSpeed Insights response.
      * 
-     * @param array $psiResponse
-     * @return array
+     * Parses the Lighthouse result data to extract key performance indicators:
+     * - Performance score (0-1 scale)
+     * - Largest Contentful Paint (LCP) in milliseconds
+     * - Interaction to Next Paint (INP) in milliseconds  
+     * - Cumulative Layout Shift (CLS) as a decimal value
+     * - First Contentful Paint (FCP) in milliseconds
+     * - Time to First Byte (TTFB) in milliseconds
+     * - First Input Delay (FID) in milliseconds
+     * 
+     * @param array $psiResponse The raw response from the PageSpeed Insights API
+     * @return array Array containing extracted metrics with keys: score, lcp, inp, cls, fcp, ttfb, fid
      */
     public function extractCoreMetrics(array $psiResponse): array
     {
@@ -131,10 +182,13 @@ class PSIClientService
     }
 
     /**
-     * Get detailed performance insights from PSI response.
+     * Extract detailed performance insights and recommendations from PSI response.
      * 
-     * @param array $psiResponse
-     * @return array
+     * Analyzes the Lighthouse audits to identify critical performance issues
+     * and provides actionable recommendations for improvement.
+     * 
+     * @param array $psiResponse The raw response from the PageSpeed Insights API
+     * @return array Array of critical issues with type, name, title, and description
      */
     public function extractPerformanceInsights(array $psiResponse): array
     {
@@ -156,5 +210,48 @@ class PSIClientService
         }
         
         return $insights;
+    }
+
+    /**
+     * Test API connectivity and validate the configured API key.
+     * 
+     * Performs a test request to the PageSpeed Insights API and returns
+     * a structured result with HTTP status, performance score, and any errors.
+     * This method is used by the CLI command to validate API configuration.
+     *
+     * @param string $url The URL to test (must be a valid HTTP/HTTPS URL)
+     * @param string $strategy The testing strategy: "mobile" or "desktop"
+     * @return array Result array with keys: http_code, score, error
+     */
+    public function testApiKey(string $url, string $strategy = 'mobile'): array
+    {
+        try {
+            $response = $this->runTest($url, $strategy);
+            $metrics = $this->extractCoreMetrics($response);
+            $score = isset($metrics['score']) ? (int) round($metrics['score'] * 100) : null;
+            
+            return [
+                'http_code' => 200,
+                'score' => $score,
+                'error' => null,
+            ];
+        } catch (\Throwable $e) {
+            $httpCode = 500;
+            $error = $e->getMessage();
+            
+            if ($e instanceof MissingApiKeyException) {
+                $httpCode = 401;
+            } elseif (str_contains($error, '429')) {
+                $httpCode = 429;
+            } elseif (str_contains($error, '5xx')) {
+                $httpCode = 502;
+            }
+            
+            return [
+                'http_code' => $httpCode,
+                'score' => null,
+                'error' => $error,
+            ];
+        }
     }
 }
