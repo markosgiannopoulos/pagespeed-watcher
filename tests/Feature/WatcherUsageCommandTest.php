@@ -3,12 +3,15 @@
 namespace Apogee\Watcher\Tests\Feature;
 
 use Apogee\Watcher\Models\WatcherApiUsage;
+use Apogee\Watcher\Services\RateLimitService;
 use Orchestra\Testbench\TestCase;
 use Apogee\Watcher\WatcherServiceProvider;
 use Carbon\Carbon;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class WatcherUsageCommandTest extends TestCase
 {
+    use RefreshDatabase;
     /**
      * Get the package providers for testing.
      * 
@@ -47,6 +50,16 @@ class WatcherUsageCommandTest extends TestCase
         
         // Load package migrations for testing
         $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
+        
+        // Mock the RateLimitService to avoid cache-related issues in tests
+        $mockRateLimitService = $this->createMock(RateLimitService::class);
+        $mockRateLimitService->method('getUsageStats')->willReturn([
+            'minute_used' => 0,
+            'minute_limit' => 10,
+            'minute_remaining' => 10,
+        ]);
+        
+        $this->app->instance(RateLimitService::class, $mockRateLimitService);
     }
 
     public function test_command_shows_no_usage_when_empty(): void
