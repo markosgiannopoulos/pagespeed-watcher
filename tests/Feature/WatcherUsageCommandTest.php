@@ -30,8 +30,8 @@ class WatcherUsageCommandTest extends TestCase
     {
         parent::setUp();
         
-        // Run migrations
-        $this->loadLaravelMigrations();
+        // Load package migrations for testing
+        $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
     }
 
     public function test_command_shows_no_usage_when_empty(): void

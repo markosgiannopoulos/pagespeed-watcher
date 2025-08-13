@@ -6,6 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use Apogee\Watcher\Console\Commands\WatcherTestApiKeyCommand;
 use Apogee\Watcher\Console\Commands\WatcherUsageCommand;
 use Apogee\Watcher\Services\PSIClientService;
+use Apogee\Watcher\Services\RateLimitService;
 use GuzzleHttp\Client as GuzzleClient;
 
 class WatcherServiceProvider extends ServiceProvider
