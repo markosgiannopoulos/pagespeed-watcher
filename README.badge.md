@@ -1,0 +1,1 @@
+[![CI](https://github.com/apogee/laravel-pagespeed-watcher/actions/workflows/ci.yml/badge.svg)](https://github.com/apogee/laravel-pagespeed-watcher/actions)
