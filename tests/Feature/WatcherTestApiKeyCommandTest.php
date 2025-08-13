@@ -113,7 +113,7 @@ class WatcherTestApiKeyCommandTest extends TestCase
         $this->app['config']->set('watcher.psi_api_key', null);
 
         $this->artisan('watcher:test-api-key')
-            ->expectsOutputToContain('PSI_API_KEY is not set')
+            ->expectsOutputToContain('PSI_API_KEY is not set. Please configure your .env and config/watcher.php.')
             ->assertExitCode(1);
     }
 
@@ -122,7 +122,7 @@ class WatcherTestApiKeyCommandTest extends TestCase
         $this->app['config']->set('app.url', null);
 
         $this->artisan('watcher:test-api-key')
-            ->expectsOutputToContain('APP_URL is not set')
+            ->expectsOutputToContain('APP_URL is not set in your application configuration.')
             ->assertExitCode(1);
     }
 
