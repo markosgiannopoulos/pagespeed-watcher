@@ -8,7 +8,6 @@ use Apogee\Watcher\Exceptions\MissingApiKeyException;
 use Apogee\Watcher\Models\WatcherApiUsage;
 use Orchestra\Testbench\TestCase;
 use GuzzleHttp\Client as GuzzleClient;
-use Mockery;
 
 class PSIClientServiceTest extends TestCase
 {
@@ -16,18 +15,27 @@ class PSIClientServiceTest extends TestCase
     {
         parent::setUp();
         
-        // Mock the WatcherApiUsage model to avoid database calls
-        $mockUsage = Mockery::mock('alias:' . WatcherApiUsage::class);
-        $mockUsage->shouldReceive('getTodayRecord')
-            ->andReturnSelf();
-        $mockUsage->shouldReceive('incrementRequests')
-            ->andReturnNull();
-    }
-
-    protected function tearDown(): void
-    {
-        Mockery::close();
-        parent::tearDown();
+        // Create a test double for WatcherApiUsage that doesn't require database
+        $testDouble = new class extends WatcherApiUsage {
+            public static function getTodayRecord(): self
+            {
+                $instance = new static();
+                $instance->date = now()->toDateString();
+                $instance->requests_total = 0;
+                $instance->requests_ok = 0;
+                $instance->requests_error = 0;
+                $instance->cost_usd_estimate = 0;
+                return $instance;
+            }
+            
+            public function incrementRequests(bool $wasSuccessful = true): void
+            {
+                // Do nothing in tests
+            }
+        };
+        
+        // Bind the test double to the container
+        $this->app->instance(WatcherApiUsage::class, $testDouble);
     }
 
     /**
