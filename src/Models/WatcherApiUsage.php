@@ -87,10 +87,7 @@ class WatcherApiUsage extends Model
                 'requests_error' => DB::raw('requests_error + ' . $errorIncrement),
                 // cost = max(0, (requests_total + 1) - daily_limit) * cost_per_request
                 'cost_usd_estimate' => DB::raw('(
-                    CASE WHEN (requests_total + 1 - ' . $dailyLimit . ') > 0
-                         THEN (requests_total + 1 - ' . $dailyLimit . ')
-                         ELSE 0
-                    END
+                    GREATEST(0, requests_total + 1 - ' . $dailyLimit . ')
                 ) * ' . $costPerRequest),
                 'updated_at' => $today,
             ]);
