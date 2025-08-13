@@ -5,11 +5,31 @@ namespace Apogee\Watcher\Tests\Unit;
 use Apogee\Watcher\Services\PSIClientService;
 use Apogee\Watcher\Services\RateLimitService;
 use Apogee\Watcher\Exceptions\MissingApiKeyException;
+use Apogee\Watcher\Models\WatcherApiUsage;
 use Orchestra\Testbench\TestCase;
 use GuzzleHttp\Client as GuzzleClient;
+use Mockery;
 
 class PSIClientServiceTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        
+        // Mock the WatcherApiUsage model to avoid database calls
+        $mockUsage = Mockery::mock('alias:' . WatcherApiUsage::class);
+        $mockUsage->shouldReceive('getTodayRecord')
+            ->andReturnSelf();
+        $mockUsage->shouldReceive('incrementRequests')
+            ->andReturnNull();
+    }
+
+    protected function tearDown(): void
+    {
+        Mockery::close();
+        parent::tearDown();
+    }
+
     /**
      * Test that the testApiKey method returns success result for valid requests.
      * 

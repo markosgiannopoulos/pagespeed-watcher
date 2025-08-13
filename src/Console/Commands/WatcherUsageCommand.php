@@ -42,7 +42,7 @@ class WatcherUsageCommand extends Command
         $this->line("  Total Requests: {$todayUsage->requests_total}");
         $this->line("  Successful: {$todayUsage->requests_ok}");
         $this->line("  Errors: {$todayUsage->requests_error}");
-        $this->line("  Cost Estimate: \${$todayUsage->cost_usd_estimate}");
+        $this->line("  Cost Estimate: \$" . number_format($todayUsage->cost_usd_estimate, 4));
         
         // Show progress percentage for daily usage
         $dailyLimit = config('watcher.api_daily_limit', 25000);
@@ -72,7 +72,7 @@ class WatcherUsageCommand extends Command
             $this->line("  Total Requests: {$totalRequests}");
             $this->line("  Successful: {$totalSuccessful}");
             $this->line("  Errors: {$totalErrors}");
-            $this->line("  Total Cost Estimate: \${$totalCost}");
+            $this->line("  Total Cost Estimate: \$" . number_format($totalCost, 4));
         }
 
         $this->line('');
