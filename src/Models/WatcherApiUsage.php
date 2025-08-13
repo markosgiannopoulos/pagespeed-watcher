@@ -26,6 +26,11 @@ class WatcherApiUsage extends Model
 
     /**
      * Get today's usage record, creating it if it doesn't exist.
+     * 
+     * Retrieves or creates a usage record for the current date.
+     * This ensures we always have a record to track daily API usage.
+     * 
+     * @return self The usage record for today
      */
     public static function getTodayRecord(): self
     {
@@ -42,6 +47,11 @@ class WatcherApiUsage extends Model
 
     /**
      * Increment request counters and update cost estimate.
+     * 
+     * Updates the usage statistics for today's API requests and calculates
+     * the cost estimate based on requests exceeding the daily limit.
+     * 
+     * @param bool $wasSuccessful Whether the request was successful (true) or failed (false)
      */
     public function incrementRequests(bool $wasSuccessful = true): void
     {

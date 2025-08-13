@@ -14,6 +14,16 @@ class WatcherTestApiKeyCommand extends Command
 
     protected $description = 'Validate connectivity to Google PageSpeed Insights using the configured API key.';
 
+    /**
+     * Execute the console command.
+     * 
+     * Tests connectivity to Google PageSpeed Insights API using the configured
+     * API key. Validates the API key, makes a test request, and displays
+     * the results including performance score and any errors.
+     * 
+     * @param PSIClientService $psiClient The PSI client service for making API requests
+     * @return int Command exit code (0 for success, 1 for failure)
+     */
     public function handle(PSIClientService $psiClient): int
     {
         $appUrl = $this->option('url');

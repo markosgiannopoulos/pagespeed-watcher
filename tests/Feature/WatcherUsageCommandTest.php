@@ -9,12 +9,23 @@ use Carbon\Carbon;
 
 class WatcherUsageCommandTest extends TestCase
 {
+    /**
+     * Get the package providers for testing.
+     * 
+     * @param mixed $app The application instance
+     * @return array Array of service provider classes
+     */
     protected function getPackageProviders($app)
     {
         /** @SuppressWarnings("UnusedFormalParameter") */
         return [WatcherServiceProvider::class];
     }
 
+    /**
+     * Set up the test environment.
+     * 
+     * Runs migrations to ensure the database schema is available for testing.
+     */
     protected function setUp(): void
     {
         parent::setUp();

@@ -9,6 +9,12 @@ use GuzzleHttp\Client as GuzzleClient;
 
 class PSIClientServiceTest extends TestCase
 {
+    /**
+     * Test that the testApiKey method returns success result for valid requests.
+     * 
+     * Verifies that when a valid API request is made, the method returns
+     * the correct HTTP code, performance score, and no error.
+     */
     public function test_test_api_key_returns_success_result(): void
     {
         $mockClient = $this->createMock(GuzzleClient::class);
@@ -30,6 +36,12 @@ class PSIClientServiceTest extends TestCase
         $this->assertNull($result['error']);
     }
 
+    /**
+     * Test that the testApiKey method handles missing API key correctly.
+     * 
+     * Verifies that when no API key is configured, the method returns
+     * the appropriate error code and message.
+     */
     public function test_test_api_key_throws_missing_key_exception(): void
     {
         $mockClient = $this->createMock(GuzzleClient::class);
@@ -42,6 +54,12 @@ class PSIClientServiceTest extends TestCase
         $this->assertEquals('PSI API key is not configured', $result['error']);
     }
 
+    /**
+     * Test that the testApiKey method handles rate limit errors correctly.
+     * 
+     * Verifies that when the API returns a 429 rate limit error,
+     * the method returns the appropriate error code and message.
+     */
     public function test_test_api_key_handles_rate_limit_error(): void
     {
         $mockClient = $this->createMock(GuzzleClient::class);
@@ -61,6 +79,12 @@ class PSIClientServiceTest extends TestCase
         $this->assertEquals('quota exceeded or rate limited (429)', $result['error']);
     }
 
+    /**
+     * Test that the testApiKey method handles server errors correctly.
+     * 
+     * Verifies that when the API returns a 5xx server error,
+     * the method returns the appropriate error code and message.
+     */
     public function test_test_api_key_handles_server_error(): void
     {
         $mockClient = $this->createMock(GuzzleClient::class);

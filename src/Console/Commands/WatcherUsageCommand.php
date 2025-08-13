@@ -12,6 +12,15 @@ class WatcherUsageCommand extends Command
 
     protected $description = 'Display PageSpeed Insights API usage statistics.';
 
+    /**
+     * Execute the console command.
+     * 
+     * Displays PageSpeed Insights API usage statistics including today's usage,
+     * last 7 days totals, cost estimates, and recommendations for optimization.
+     * Shows progress towards daily limits and provides actionable advice.
+     * 
+     * @return int Command exit code (0 for success)
+     */
     public function handle(): int
     {
         $this->info('PageSpeed Insights API Usage Statistics');

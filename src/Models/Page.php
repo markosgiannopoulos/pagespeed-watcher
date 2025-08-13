@@ -35,6 +35,14 @@ class Page extends Model
         'priority' => 'integer',
     ];
 
+    /**
+     * Get the test results for this page.
+     * 
+     * Returns a relationship to all PageSpeed Insights test results
+     * that have been run for this specific page.
+     * 
+     * @return HasMany Relationship to test results
+     */
     public function testResults(): HasMany
     {
         return $this->hasMany(TestResult::class, 'page_id');

@@ -8,12 +8,25 @@ use Apogee\Watcher\WatcherServiceProvider;
 
 class WatcherTestApiKeyCommandTest extends TestCase
 {
+    /**
+     * Get the package providers for testing.
+     * 
+     * @param mixed $app The application instance
+     * @return array Array of service provider classes
+     */
     protected function getPackageProviders($app)
     {
         /** @SuppressWarnings("UnusedFormalParameter") */
         return [WatcherServiceProvider::class];
     }
 
+    /**
+     * Define the test environment.
+     * 
+     * Sets up the test environment with required configuration values.
+     * 
+     * @param mixed $app The application instance
+     */
     protected function defineEnvironment($app)
     {
         $app['config']->set('watcher.psi_api_key', 'test_key');

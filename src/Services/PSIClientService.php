@@ -23,6 +23,12 @@ class PSIClientService
 
     private const VALID_STRATEGIES = ['mobile', 'desktop'];
 
+    /**
+     * Create a new PSI client service instance.
+     * 
+     * @param GuzzleClient $httpClient The HTTP client for making API requests
+     * @param string|null $apiKey The Google PageSpeed Insights API key
+     */
     public function __construct(GuzzleClient $httpClient, ?string $apiKey)
     {
         $this->httpClient = $httpClient;
@@ -31,14 +37,18 @@ class PSIClientService
     }
 
     /**
-     * Run a PSI test for the given URL and strategy.
+     * Run a PageSpeed Insights test for the given URL and strategy.
+     * 
+     * Makes an API request to Google PageSpeed Insights and returns the raw response.
+     * This method handles error responses, rate limiting, and usage tracking.
      *
-     * @param string $url
-     * @param string $strategy "mobile" or "desktop"
-     * @return array Decoded JSON response
-     * @throws GuzzleException
-     * @throws InvalidArgumentException
-     * @throws \RuntimeException
+     * @param string $url The URL to test (must be a valid HTTP/HTTPS URL)
+     * @param string $strategy The testing strategy: "mobile" or "desktop"
+     * @return array The decoded JSON response from the PSI API
+     * @throws InvalidArgumentException When URL is invalid or strategy is unsupported
+     * @throws MissingApiKeyException When API key is not configured
+     * @throws \RuntimeException When API returns an error response
+     * @throws GuzzleException When HTTP request fails
      */
     public function runTest(string $url, string $strategy = 'mobile'): array
     {
@@ -134,13 +144,19 @@ class PSIClientService
     }
 
     /**
-     * Extract core metrics from a PSI response.
-     * - score: 0..1
-     * - lcp, inp in milliseconds
-     * - cls decimal (unitless)
+     * Extract core performance metrics from a PageSpeed Insights response.
      * 
-     * @param array $psiResponse
-     * @return array
+     * Parses the Lighthouse result data to extract key performance indicators:
+     * - Performance score (0-1 scale)
+     * - Largest Contentful Paint (LCP) in milliseconds
+     * - Interaction to Next Paint (INP) in milliseconds  
+     * - Cumulative Layout Shift (CLS) as a decimal value
+     * - First Contentful Paint (FCP) in milliseconds
+     * - Time to First Byte (TTFB) in milliseconds
+     * - First Input Delay (FID) in milliseconds
+     * 
+     * @param array $psiResponse The raw response from the PageSpeed Insights API
+     * @return array Array containing extracted metrics with keys: score, lcp, inp, cls, fcp, ttfb, fid
      */
     public function extractCoreMetrics(array $psiResponse): array
     {
@@ -165,10 +181,13 @@ class PSIClientService
     }
 
     /**
-     * Get detailed performance insights from PSI response.
+     * Extract detailed performance insights and recommendations from PSI response.
      * 
-     * @param array $psiResponse
-     * @return array
+     * Analyzes the Lighthouse audits to identify critical performance issues
+     * and provides actionable recommendations for improvement.
+     * 
+     * @param array $psiResponse The raw response from the PageSpeed Insights API
+     * @return array Array of critical issues with type, name, title, and description
      */
     public function extractPerformanceInsights(array $psiResponse): array
     {
@@ -193,11 +212,15 @@ class PSIClientService
     }
 
     /**
-     * Test API connectivity and return result.
+     * Test API connectivity and validate the configured API key.
+     * 
+     * Performs a test request to the PageSpeed Insights API and returns
+     * a structured result with HTTP status, performance score, and any errors.
+     * This method is used by the CLI command to validate API configuration.
      *
-     * @param string $url
-     * @param string $strategy
-     * @return array
+     * @param string $url The URL to test (must be a valid HTTP/HTTPS URL)
+     * @param string $strategy The testing strategy: "mobile" or "desktop"
+     * @return array Result array with keys: http_code, score, error
      */
     public function testApiKey(string $url, string $strategy = 'mobile'): array
     {

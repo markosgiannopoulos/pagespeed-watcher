@@ -40,6 +40,14 @@ class TestResult extends Model
         'created_at' => 'datetime',
     ];
 
+    /**
+     * Get the page that this test result belongs to.
+     * 
+     * Returns a relationship to the page that was tested
+     * to generate this PageSpeed Insights result.
+     * 
+     * @return BelongsTo Relationship to the tested page
+     */
     public function page(): BelongsTo
     {
         return $this->belongsTo(Page::class, 'page_id');
