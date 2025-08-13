@@ -54,6 +54,32 @@ class WatcherUsageCommand extends Command
             $this->line("  Total Cost Estimate: \${$totalCost}");
         }
 
+        $this->line('');
+
+        // Show daily limit information
+        $dailyLimit = config('watcher.api_daily_limit', 25000);
+        $this->line("Daily Limit: {$dailyLimit} requests");
+        
+        if ($todayUsage) {
+            $remaining = max(0, $dailyLimit - $todayUsage->requests_total);
+            $this->line("Remaining Today: {$remaining} requests");
+            
+            if ($remaining < 100) {
+                $this->warn('⚠️  Daily limit nearly reached');
+            }
+        }
+
+        // Recommendations
+        if ($todayUsage && $todayUsage->requests_error > 0) {
+            $this->line('');
+            $this->warn('Recommendation: Check for API errors in your configuration');
+        }
+        
+        if ($todayUsage && $todayUsage->cost_usd_estimate > 0) {
+            $this->line('');
+            $this->warn('Recommendation: Consider reducing test frequency to avoid costs');
+        }
+
         return self::SUCCESS;
     }
 }

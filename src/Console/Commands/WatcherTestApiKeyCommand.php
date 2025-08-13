@@ -45,11 +45,32 @@ class WatcherTestApiKeyCommand extends Command
             $this->info("HTTP Code: {$result['http_code']}");
             if ($result['score'] !== null) {
                 $this->line("Performance Score: {$result['score']}");
+                
+                // Provide performance feedback
+                $thresholds = config('watcher.thresholds', []);
+                $excellent = $thresholds['excellent'] ?? 90;
+                $good = $thresholds['good'] ?? 70;
+                
+                if ($result['score'] >= $excellent) {
+                    $this->info('Performance: Excellent');
+                } elseif ($result['score'] >= $good) {
+                    $this->warn('Performance: Good');
+                } else {
+                    $this->error('Performance: Needs improvement');
+                }
             }
             return self::SUCCESS;
         } else {
             $this->error("HTTP Code: {$result['http_code']}");
             $this->error("Error: {$result['error']}");
+            
+            // Provide more specific error guidance
+            if (str_contains($result['error'], 'API key')) {
+                $this->line('Please check your PSI_API_KEY configuration.');
+            } elseif (str_contains($result['error'], 'quota') || str_contains($result['error'], '429')) {
+                $this->line('You may have exceeded your daily API quota.');
+            }
+            
             return self::FAILURE;
         }
     }

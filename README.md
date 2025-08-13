@@ -34,6 +34,13 @@ Set your PSI API key and optional defaults in `.env`:
 | `DAILY_TEST_TIME` | 07:00 | Time to run daily tests |
 | `DISCOVERY_MAX_URLS` | 100 | Maximum URLs to discover |
 | `DISCOVERY_MAX_DEPTH` | 3 | Maximum depth for URL discovery |
+| `PSI_THRESHOLD_EXCELLENT` | 90 | Performance score threshold for "excellent" |
+| `PSI_THRESHOLD_GOOD` | 70 | Performance score threshold for "good" |
+| `PSI_THRESHOLD_NEEDS_IMPROVEMENT` | 50 | Performance score threshold for "needs improvement" |
+| `PSI_HTTP_TIMEOUT` | 120 | HTTP request timeout in seconds |
+| `PSI_CONNECT_TIMEOUT` | 15 | HTTP connection timeout in seconds |
+| `PSI_RETRY_ATTEMPTS` | 3 | Number of retry attempts for failed requests |
+| `PSI_RETRY_DELAY` | 5 | Delay between retry attempts in seconds |
 
 ## Commands
 
