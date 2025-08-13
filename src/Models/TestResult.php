@@ -3,6 +3,7 @@
 namespace Apogee\Watcher\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class TestResult extends Model
 {
@@ -34,7 +35,13 @@ class TestResult extends Model
         'fcp' => 'integer',
         'tbt' => 'integer',
         'speed_index' => 'integer',
+        'raw_json' => 'array',
         'status' => 'string',
         'created_at' => 'datetime',
     ];
+
+    public function page(): BelongsTo
+    {
+        return $this->belongsTo(Page::class, 'page_id');
+    }
 }

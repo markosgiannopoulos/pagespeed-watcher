@@ -8,7 +8,9 @@ use RuntimeException;
 
 class WatcherTestApiKeyCommand extends Command
 {
-    protected $signature = 'watcher:test-api-key {--strategy=mobile : Strategy to test: mobile or desktop}';
+    protected $signature = 'watcher:test-api-key
+        {--strategy=mobile : Strategy to test: mobile or desktop}
+        {--url= : URL to test (defaults to app.url)}';
 
     protected $description = 'Validate connectivity to Google PageSpeed Insights using the configured API key.';
 
@@ -20,7 +22,7 @@ class WatcherTestApiKeyCommand extends Command
             return self::FAILURE;
         }
 
-        $appUrl = config('app.url') ?? env('APP_URL');
+        $appUrl = $this->option('url') ?: (config('app.url') ?? env('APP_URL'));
         if (empty($appUrl)) {
             $this->error('APP_URL is not set in your application configuration.');
             return self::FAILURE;
@@ -42,9 +44,6 @@ class WatcherTestApiKeyCommand extends Command
 
         try {
             $response = $psiClient->runTest($appUrl, $strategy);
-            if (!is_array($response)) {
-                throw new RuntimeException('Unexpected response from PSI API.');
-            }
 
             $metrics = $psiClient->extractCoreMetrics($response);
             $scorePercent = isset($metrics['score']) ? (int) round($metrics['score'] * 100) : null;

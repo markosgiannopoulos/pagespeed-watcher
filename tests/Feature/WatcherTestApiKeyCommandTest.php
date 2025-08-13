@@ -10,6 +10,7 @@ class WatcherTestApiKeyCommandTest extends TestCase
 {
     protected function getPackageProviders($app)
     {
+        /** @SuppressWarnings("UnusedFormalParameter") */
         return [WatcherServiceProvider::class];
     }
 
@@ -52,6 +53,7 @@ class WatcherTestApiKeyCommandTest extends TestCase
     {
         $fake = new class(new \GuzzleHttp\Client(), 'test_key') extends PSIClientService {
             public function __construct($client, $key) { parent::__construct($client, $key); }
+            /** @SuppressWarnings("UnusedFormalParameter") */
             public function runTest(string $url, string $strategy = 'mobile'): array {
                 return [
                     'lighthouseResult' => [
@@ -81,6 +83,7 @@ class WatcherTestApiKeyCommandTest extends TestCase
     {
         $fake = new class(new \GuzzleHttp\Client(), 'test_key') extends PSIClientService {
             public function __construct($client, $key) { parent::__construct($client, $key); }
+            /** @SuppressWarnings("UnusedFormalParameter") */
             public function runTest(string $url, string $strategy = 'mobile'): array {
                 return [
                     'lighthouseResult' => [
@@ -134,6 +137,7 @@ class WatcherTestApiKeyCommandTest extends TestCase
     {
         $fake = new class(new \GuzzleHttp\Client(), 'test_key') extends PSIClientService {
             public function __construct($client, $key) { parent::__construct($client, $key); }
+            /** @SuppressWarnings("UnusedFormalParameter") */
             public function runTest(string $url, string $strategy = 'mobile'): array {
                 throw new \RuntimeException('API key error: Invalid API key');
             }

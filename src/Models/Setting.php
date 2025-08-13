@@ -4,6 +4,11 @@ namespace Apogee\Watcher\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property string      $key
+ * @property string|null $value
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ */
 class Setting extends Model
 {
     public $timestamps = false;

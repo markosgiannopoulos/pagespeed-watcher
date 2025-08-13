@@ -9,6 +9,8 @@ use Apogee\Watcher\Services\RateLimitService;
 
 class PSIClientService
 {
+    private const PSI_ENDPOINT = 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed';
+
     private GuzzleClient $httpClient;
 
     private ?string $apiKey;
@@ -32,6 +34,7 @@ class PSIClientService
      * @return array Decoded JSON response
      * @throws GuzzleException
      * @throws InvalidArgumentException
+     * @throws \RuntimeException
      */
     public function runTest(string $url, string $strategy = 'mobile'): array
     {
@@ -63,11 +66,9 @@ class PSIClientService
             $query['key'] = $this->apiKey;
         }
 
-        $response = $this->httpClient->request('GET', 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed', [
+        $response = $this->httpClient->request('GET', self::PSI_ENDPOINT, [
             'query' => $query,
             'http_errors' => true,
-            'timeout' => 120,
-            'connect_timeout' => 15,
         ]);
 
         $json = json_decode((string) $response->getBody(), true);

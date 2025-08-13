@@ -19,9 +19,10 @@
   "require": {
     "php": "^8.2",
     "illuminate/support": "^11.0",
+    "illuminate/console": "^11.0",
     "guzzlehttp/guzzle": "^7.9",
-    "symfony/dom-crawler": "^6.3",
-    "symfony/css-selector": "^6.3"
+    "symfony/dom-crawler": "^6.4",
+    "symfony/css-selector": "^6.4"
   },
   "require-dev": {
     "orchestra/testbench": "^9.0",

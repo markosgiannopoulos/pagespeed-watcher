@@ -60,6 +60,8 @@ This shows daily and per-minute usage statistics with recommendations.
 
 > Note: The OSS package is CLI-only at this stage. Scheduling guidance for your app's `App\\Console\\Kernel` will come later.
 
+Learn more: [Google PageSpeed Insights API](https://developers.google.com/speed/docs/insights/v5/get-started) (API keys, quotas, and usage)
+
 ## License
 
 MIT © Apogee

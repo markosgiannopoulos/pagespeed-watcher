@@ -21,8 +21,8 @@ return [
     |
     */
     
-    'api_daily_limit' => env('API_DAILY_LIMIT', 25000),
-    'rate_limit_per_minute' => env('PSI_RATE_LIMIT_PER_MINUTE', 10),
+    'api_daily_limit' => (int) env('API_DAILY_LIMIT', 25000),
+    'rate_limit_per_minute' => (int) env('PSI_RATE_LIMIT_PER_MINUTE', 10),
     
     /*
     |--------------------------------------------------------------------------
@@ -33,7 +33,7 @@ return [
     |
     */
     
-    'default_timezone' => env('DEFAULT_TIMEZONE', 'UTC'),
+    'default_timezone' => env('APP_TIMEZONE', 'UTC'),
     'daily_test_time' => env('DAILY_TEST_TIME', '07:00'),
     'test_interval_hours' => env('TEST_INTERVAL_HOURS', 24),
     
@@ -47,8 +47,8 @@ return [
     */
     
     'discovery' => [
-        'max_urls' => env('DISCOVERY_MAX_URLS', 100),
-        'max_depth' => env('DISCOVERY_MAX_DEPTH', 3),
+        'max_urls' => (int) env('DISCOVERY_MAX_URLS', 100),
+        'max_depth' => (int) env('DISCOVERY_MAX_DEPTH', 3),
         'exclude_patterns' => [
             '*.pdf',
             '*.jpg', '*.jpeg', '*.png', '*.gif', '*.svg',
@@ -68,9 +68,9 @@ return [
     */
     
     'thresholds' => [
-        'excellent' => env('PSI_THRESHOLD_EXCELLENT', 90),
-        'good' => env('PSI_THRESHOLD_GOOD', 70),
-        'needs_improvement' => env('PSI_THRESHOLD_NEEDS_IMPROVEMENT', 50),
+        'excellent' => (int) env('PSI_THRESHOLD_EXCELLENT', 90),
+        'good' => (int) env('PSI_THRESHOLD_GOOD', 70),
+        'needs_improvement' => (int) env('PSI_THRESHOLD_NEEDS_IMPROVEMENT', 50),
     ],
     
     /*
@@ -83,9 +83,9 @@ return [
     */
     
     'http_client' => [
-        'timeout' => env('PSI_HTTP_TIMEOUT', 120),
-        'connect_timeout' => env('PSI_CONNECT_TIMEOUT', 15),
-        'retry_attempts' => env('PSI_RETRY_ATTEMPTS', 3),
-        'retry_delay' => env('PSI_RETRY_DELAY', 5),
+        'timeout' => (int) env('PSI_HTTP_TIMEOUT', 120),
+        'connect_timeout' => (int) env('PSI_CONNECT_TIMEOUT', 15),
+        'retry_attempts' => (int) env('PSI_RETRY_ATTEMPTS', 3),
+        'retry_delay' => (int) env('PSI_RETRY_DELAY', 5),
     ],
 ];
