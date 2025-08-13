@@ -33,10 +33,29 @@ class WatcherTestApiKeyCommandTest extends TestCase
         $app['config']->set('app.url', 'https://example.com');
     }
 
+    /**
+     * Create a mock PSI client service for testing.
+     * 
+     * @param string|null $apiKey The API key to use
+     * @return PSIClientService A mock service instance
+     */
+    private function createMockPSIClient(?string $apiKey = 'test_key'): PSIClientService
+    {
+        return new class(new \GuzzleHttp\Client(), $apiKey) extends PSIClientService {
+            public function __construct($client, $key) { 
+                $rateLimitService = new \Apogee\Watcher\Services\RateLimitService();
+                parent::__construct($client, $key, $rateLimitService); 
+            }
+        };
+    }
+
     public function test_command_reports_ok_and_score(): void
     {
         $fake = new class(new \GuzzleHttp\Client(), 'test_key') extends PSIClientService {
-            public function __construct($client, $key) { parent::__construct($client, $key); }
+            public function __construct($client, $key) { 
+                $rateLimitService = new \Apogee\Watcher\Services\RateLimitService();
+                parent::__construct($client, $key, $rateLimitService); 
+            }
             public function testApiKey(string $url, string $strategy = 'mobile'): array {
                 return [
                     'http_code' => 200,

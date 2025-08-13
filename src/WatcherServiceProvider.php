@@ -20,6 +20,10 @@ class WatcherServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__ . '/../config/watcher.php', 'watcher');
 
+        $this->app->singleton(RateLimitService::class, function ($app) {
+            return new RateLimitService();
+        });
+
         $this->app->singleton(PSIClientService::class, function ($app) {
             $config = config('watcher.http_client', []);
             
@@ -31,7 +35,11 @@ class WatcherServiceProvider extends ServiceProvider
                 ],
             ]);
 
-            return new PSIClientService($guzzle, config('watcher.psi_api_key'));
+            return new PSIClientService(
+                $guzzle, 
+                config('watcher.psi_api_key'),
+                $app->make(RateLimitService::class)
+            );
         });
     }
 

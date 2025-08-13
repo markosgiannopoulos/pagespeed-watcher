@@ -4,6 +4,7 @@ namespace Apogee\Watcher\Console\Commands;
 
 use Illuminate\Console\Command;
 use Apogee\Watcher\Models\WatcherApiUsage;
+use Apogee\Watcher\Services\RateLimitService;
 use Carbon\Carbon;
 
 class WatcherUsageCommand extends Command
@@ -19,9 +20,10 @@ class WatcherUsageCommand extends Command
      * last 7 days totals, cost estimates, and recommendations for optimization.
      * Shows progress towards daily limits and provides actionable advice.
      * 
+     * @param RateLimitService $rateLimitService The rate limiting service for real-time stats
      * @return int Command exit code (0 for success)
      */
-    public function handle(): int
+    public function handle(RateLimitService $rateLimitService): int
     {
         $this->info('PageSpeed Insights API Usage Statistics');
         $this->line('');
@@ -75,10 +77,18 @@ class WatcherUsageCommand extends Command
 
         $this->line('');
 
-        // Rate limiting information
-        $this->line('Rate Limiting:');
-        $this->line('  Google PSI API has rate limits per minute');
-        $this->line('  If you encounter 429 errors, implement delays between requests');
+        // Get real-time rate limiting stats
+        $rateStats = $rateLimitService->getUsageStats();
+        
+        // Minute usage
+        $this->line('Rate Limit (per minute):');
+        $this->line("  Used: {$rateStats['minute_used']} / {$rateStats['minute_limit']}");
+        $this->line("  Remaining: {$rateStats['minute_remaining']}");
+        
+        if ($rateStats['minute_remaining'] === 0) {
+            $this->error('  ❌ Rate limit reached - wait before making more requests');
+        }
+        
         $this->line('');
 
         // Show daily limit information

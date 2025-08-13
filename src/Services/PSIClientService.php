@@ -28,12 +28,13 @@ class PSIClientService
      * 
      * @param GuzzleClient $httpClient The HTTP client for making API requests
      * @param string|null $apiKey The Google PageSpeed Insights API key
+     * @param RateLimitService $rateLimitService The rate limiting service
      */
-    public function __construct(GuzzleClient $httpClient, ?string $apiKey)
+    public function __construct(GuzzleClient $httpClient, ?string $apiKey, RateLimitService $rateLimitService)
     {
         $this->httpClient = $httpClient;
         $this->apiKey = $apiKey;
-        $this->rateLimitService = new RateLimitService();
+        $this->rateLimitService = $rateLimitService;
     }
 
     /**

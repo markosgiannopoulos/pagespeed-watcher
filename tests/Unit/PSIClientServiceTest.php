@@ -3,6 +3,7 @@
 namespace Apogee\Watcher\Tests\Unit;
 
 use Apogee\Watcher\Services\PSIClientService;
+use Apogee\Watcher\Services\RateLimitService;
 use Apogee\Watcher\Exceptions\MissingApiKeyException;
 use Orchestra\Testbench\TestCase;
 use GuzzleHttp\Client as GuzzleClient;
@@ -27,7 +28,11 @@ class PSIClientServiceTest extends TestCase
                 ],
             ])));
 
-        $service = new PSIClientService($mockClient, 'test_key');
+        $rateLimitService = $this->createMock(RateLimitService::class);
+        $rateLimitService->method('canMakeRequest')->willReturn(true);
+        $rateLimitService->method('recordRequest')->willReturn(null);
+        
+        $service = new PSIClientService($mockClient, 'test_key', $rateLimitService);
 
         $result = $service->testApiKey('https://example.com', 'mobile');
 
@@ -45,7 +50,8 @@ class PSIClientServiceTest extends TestCase
     public function test_test_api_key_throws_missing_key_exception(): void
     {
         $mockClient = $this->createMock(GuzzleClient::class);
-        $service = new PSIClientService($mockClient, null);
+        $rateLimitService = $this->createMock(RateLimitService::class);
+        $service = new PSIClientService($mockClient, null, $rateLimitService);
 
         $result = $service->testApiKey('https://example.com', 'mobile');
 
@@ -70,7 +76,11 @@ class PSIClientServiceTest extends TestCase
                 new \GuzzleHttp\Psr7\Response(429)
             ));
 
-        $service = new PSIClientService($mockClient, 'test_key');
+        $rateLimitService = $this->createMock(RateLimitService::class);
+        $rateLimitService->method('canMakeRequest')->willReturn(true);
+        $rateLimitService->method('recordRequest')->willReturn(null);
+        
+        $service = new PSIClientService($mockClient, 'test_key', $rateLimitService);
 
         $result = $service->testApiKey('https://example.com', 'mobile');
 
@@ -95,7 +105,11 @@ class PSIClientServiceTest extends TestCase
                 new \GuzzleHttp\Psr7\Response(500)
             ));
 
-        $service = new PSIClientService($mockClient, 'test_key');
+        $rateLimitService = $this->createMock(RateLimitService::class);
+        $rateLimitService->method('canMakeRequest')->willReturn(true);
+        $rateLimitService->method('recordRequest')->willReturn(null);
+        
+        $service = new PSIClientService($mockClient, 'test_key', $rateLimitService);
 
         $result = $service->testApiKey('https://example.com', 'mobile');
 
