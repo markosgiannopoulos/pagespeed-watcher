@@ -10,9 +10,9 @@ return new class extends Migration {
         Schema::create('watcher_api_usage', function (Blueprint $table) {
             $table->id();
             $table->date('date')->unique();
-            $table->unsignedInteger('requests_total')->default(0);
-            $table->unsignedInteger('requests_ok')->default(0);
-            $table->unsignedInteger('requests_error')->default(0);
+            $table->integer('requests_total')->default(0);
+            $table->integer('requests_ok')->default(0);
+            $table->integer('requests_error')->default(0);
             $table->decimal('cost_usd_estimate', 10, 4)->default(0);
             $table->timestamps();
         });
