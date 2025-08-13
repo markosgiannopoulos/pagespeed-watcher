@@ -22,7 +22,10 @@ class WatcherTestApiKeyCommand extends Command
             return self::FAILURE;
         }
 
-        $appUrl = $this->option('url') ?: (config('app.url') ?? env('APP_URL'));
+        $appUrl = $this->option('url');
+        if (empty($appUrl)) {
+            $appUrl = config('app.url');
+        }
         if (empty($appUrl)) {
             $this->error('APP_URL is not set');
             return self::FAILURE;
