@@ -42,6 +42,22 @@ php artisan watcher:test-api-key
 
 The command calls PSI for your `APP_URL` using the configured key, printing status and a performance score if available.
 
+You can also test with desktop strategy:
+
+```bash
+php artisan watcher:test-api-key --strategy=desktop
+```
+
+## Check API usage
+
+Monitor your PageSpeed Insights API usage:
+
+```bash
+php artisan watcher:usage
+```
+
+This shows daily and per-minute usage statistics with recommendations.
+
 > Note: The OSS package is CLI-only at this stage. Scheduling guidance for your app's `App\\Console\\Kernel` will come later.
 
 ## License
