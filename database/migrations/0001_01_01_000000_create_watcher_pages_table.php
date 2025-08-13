@@ -19,6 +19,7 @@ return new class extends Migration {
             $table->timestamps();
 
             $table->index(['active', 'priority']);
+            $table->index('auto_discovered');
         });
     }
 
