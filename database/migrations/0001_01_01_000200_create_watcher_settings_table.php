@@ -10,6 +10,7 @@ return new class extends Migration {
         Schema::create('watcher_settings', function (Blueprint $table) {
             $table->string('key')->primary();
             $table->text('value');
+            $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
         });
     }
