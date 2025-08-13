@@ -35,6 +35,8 @@ Set your PSI API key and optional defaults in `.env`:
 | `DAILY_TEST_TIME` | 07:00 | Time to run daily tests |
 | `DISCOVERY_MAX_URLS` | 100 | Maximum URLs to discover |
 | `DISCOVERY_MAX_DEPTH` | 3 | Maximum depth for URL discovery |
+| `WATCHER_ENFORCE_SAME_HOST` | true | Enforce that tested URLs match APP_URL host |
+| `PSI_COST_PER_REQUEST` | 0.002 | Cost per request after free tier (USD) |
 | `PSI_THRESHOLD_EXCELLENT` | 90 | Performance score threshold for "excellent" |
 | `PSI_THRESHOLD_GOOD` | 70 | Performance score threshold for "good" |
 | `PSI_THRESHOLD_NEEDS_IMPROVEMENT` | 50 | Performance score threshold for "needs improvement" |
@@ -79,7 +81,7 @@ The package creates these tables:
 ## Cost Estimation
 
 The package tracks API usage and estimates costs for requests exceeding your daily limit:
-- Cost calculation: `max(0, requests_total - daily_limit) * 0.002`
+- Cost calculation: `max(0, requests_total - daily_limit) * PSI_COST_PER_REQUEST`
 - Usage is tracked per day with success/error counts
 
 ## License

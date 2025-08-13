@@ -62,6 +62,19 @@ class PSIClientService
             throw new InvalidArgumentException('Invalid URL format');
         }
 
+        // Enforce same host if enabled
+        $enforceSameHost = (bool) config('watcher.enforce_same_host', true);
+        if ($enforceSameHost) {
+            $appUrl = config('app.url') ?: env('APP_URL');
+            if (!empty($appUrl) && filter_var($appUrl, FILTER_VALIDATE_URL)) {
+                $appHost = parse_url($appUrl, PHP_URL_HOST);
+                $targetHost = parse_url($url, PHP_URL_HOST);
+                if ($appHost && $targetHost && strcasecmp($appHost, $targetHost) !== 0) {
+                    throw new InvalidArgumentException('URL host must match APP_URL host');
+                }
+            }
+        }
+
         if (!in_array($strategy, self::VALID_STRATEGIES, true)) {
             throw new InvalidArgumentException('Strategy must be "mobile" or "desktop"');
         }

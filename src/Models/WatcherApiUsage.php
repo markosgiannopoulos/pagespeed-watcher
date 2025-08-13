@@ -63,10 +63,11 @@ class WatcherApiUsage extends Model
             $this->increment('requests_error');
         }
 
-        // Calculate cost estimate: max(0, requests_total - daily_limit) * 0.002
+        // Calculate cost estimate: max(0, requests_total - daily_limit) * psi_cost_per_request
         $dailyLimit = config('watcher.api_daily_limit', 25000);
         $excessRequests = max(0, $this->requests_total - $dailyLimit);
-        $this->cost_usd_estimate = $excessRequests * 0.002;
+        $costPerRequest = (float) config('watcher.psi_cost_per_request', 0.002);
+        $this->cost_usd_estimate = $excessRequests * $costPerRequest;
         
         $this->save();
     }
