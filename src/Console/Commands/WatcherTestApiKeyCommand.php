@@ -18,13 +18,13 @@ class WatcherTestApiKeyCommand extends Command
     {
         $apiKey = config('watcher.psi_api_key');
         if (empty($apiKey)) {
-            $this->error('PSI_API_KEY is not set. Please configure your .env and config/watcher.php.');
+            $this->error('PSI_API_KEY is not set');
             return self::FAILURE;
         }
 
         $appUrl = $this->option('url') ?: (config('app.url') ?? env('APP_URL'));
         if (empty($appUrl)) {
-            $this->error('APP_URL is not set in your application configuration.');
+            $this->error('APP_URL is not set');
             return self::FAILURE;
         }
 
