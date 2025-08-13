@@ -3,6 +3,7 @@
 namespace Apogee\Watcher\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class WatcherApiUsage extends Model
 {
@@ -51,23 +52,52 @@ class WatcherApiUsage extends Model
      * Updates the usage statistics for today's API requests and calculates
      * the cost estimate based on requests exceeding the daily limit.
      * 
+     * Uses an upsert to ensure the row exists and atomic increments to avoid races.
+     * 
      * @param bool $wasSuccessful Whether the request was successful (true) or failed (false)
      */
     public function incrementRequests(bool $wasSuccessful = true): void
     {
-        $this->increment('requests_total');
-        
-        if ($wasSuccessful) {
-            $this->increment('requests_ok');
-        } else {
-            $this->increment('requests_error');
-        }
+        $today = now();
+        $dateString = $today->toDateString();
 
-        // Calculate cost estimate: max(0, requests_total - daily_limit) * 0.002
-        $dailyLimit = config('watcher.api_daily_limit', 25000);
-        $excessRequests = max(0, $this->requests_total - $dailyLimit);
-        $this->cost_usd_estimate = $excessRequests * 0.002;
-        
-        $this->save();
+        $dailyLimit = (int) config('watcher.api_daily_limit', 25000);
+        $costPerRequest = (float) config('watcher.psi_cost_per_request', 0.002);
+
+        // Ensure row exists for today
+        DB::table($this->table)->upsert([
+            'date' => $dateString,
+            'requests_total' => 0,
+            'requests_ok' => 0,
+            'requests_error' => 0,
+            'cost_usd_estimate' => 0,
+            'created_at' => $today,
+            'updated_at' => $today,
+        ], ['date'], ['updated_at']);
+
+        $okIncrement = $wasSuccessful ? 1 : 0;
+        $errorIncrement = $wasSuccessful ? 0 : 1;
+
+        // Atomic increments and cost recomputation in a single UPDATE
+        DB::table($this->table)
+            ->where('date', $dateString)
+            ->update([
+                'requests_total' => DB::raw('requests_total + 1'),
+                'requests_ok' => DB::raw('requests_ok + ' . $okIncrement),
+                'requests_error' => DB::raw('requests_error + ' . $errorIncrement),
+                // cost = max(0, (requests_total + 1) - daily_limit) * cost_per_request
+                'cost_usd_estimate' => DB::raw('(
+                    CASE WHEN (requests_total + 1 - ' . $dailyLimit . ') > 0
+                         THEN (requests_total + 1 - ' . $dailyLimit . ')
+                         ELSE 0
+                    END
+                ) * ' . $costPerRequest),
+                'updated_at' => $today,
+            ]);
+
+        // Refresh in-memory model if this instance represents today's record
+        if ($this->date && $this->date->toDateString() === $dateString) {
+            $this->refresh();
+        }
     }
 }

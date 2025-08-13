@@ -48,6 +48,14 @@ class WatcherUsageCommand extends Command
         $dailyLimit = config('watcher.api_daily_limit', 25000);
         $dailyPercentage = ($todayUsage->requests_total / $dailyLimit) * 100;
         $this->line("  Progress: " . number_format($dailyPercentage, 1) . '%');
+
+        $freeRemaining = max(0, $dailyLimit - $todayUsage->requests_total);
+        $overCap = max(0, $todayUsage->requests_total - $dailyLimit);
+        $costPerRequest = (float) config('watcher.psi_cost_per_request', 0.002);
+        $this->line("  Free-tier remaining today: {$freeRemaining}");
+        if ($overCap > 0) {
+            $this->line("  Over cap today: {$overCap} (est. cost: $" . number_format($overCap * $costPerRequest, 4) . ")");
+        }
         
         if ($dailyPercentage > 80) {
             $this->warn('  ⚠️  Daily limit nearly reached');

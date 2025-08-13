@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Setting extends Model
 {
-    public $timestamps = false;
+    public $timestamps = true;
 
     protected $table = 'watcher_settings';
 

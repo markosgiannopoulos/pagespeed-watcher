@@ -27,6 +27,7 @@ return [
     
     'api_daily_limit' => (int) env('API_DAILY_LIMIT', 25000),
     'rate_limit_per_minute' => (int) env('PSI_RATE_LIMIT_PER_MINUTE', 10),
+    'psi_cost_per_request' => (float) env('PSI_COST_PER_REQUEST', 0.002),
     
     /*
     |--------------------------------------------------------------------------
@@ -75,6 +76,18 @@ return [
             '/admin/*', '/api/*',
         ],
     ],
+    
+    /*
+    |--------------------------------------------------------------------------
+    | Host Enforcement
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, only allow testing URLs that match the host of APP_URL.
+    | This helps prevent accidental testing of external domains.
+    |
+    */
+    
+    'enforce_same_host' => filter_var(env('WATCHER_ENFORCE_SAME_HOST', true), FILTER_VALIDATE_BOOLEAN),
     
     /*
     |--------------------------------------------------------------------------

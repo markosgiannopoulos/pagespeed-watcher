@@ -31,7 +31,7 @@ class TestResult extends Model
         'performance_score' => 'integer',
         'lcp_ms' => 'integer',
         'inp_ms' => 'integer',
-        'cls' => 'decimal:3',
+        'cls' => 'decimal:4',
         'fcp_ms' => 'integer',
         'tbt_ms' => 'integer',
         'speed_index_ms' => 'integer',
