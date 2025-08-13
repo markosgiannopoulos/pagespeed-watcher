@@ -30,6 +30,7 @@ Set your PSI API key and optional defaults in `.env`:
 |---------------------|---------|-------------|
 | `PSI_API_KEY` | - | Your Google PageSpeed Insights API key |
 | `API_DAILY_LIMIT` | 25000 | Daily API request limit |
+| `PSI_RATE_LIMIT_PER_MINUTE` | 10 | Rate limit per minute for API requests |
 | `DEFAULT_TIMEZONE` | Europe/Luxembourg | Default timezone for scheduling |
 | `DAILY_TEST_TIME` | 07:00 | Time to run daily tests |
 | `DISCOVERY_MAX_URLS` | 100 | Maximum URLs to discover |

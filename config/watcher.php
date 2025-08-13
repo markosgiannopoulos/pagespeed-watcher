@@ -26,6 +26,7 @@ return [
     */
     
     'api_daily_limit' => (int) env('API_DAILY_LIMIT', 25000),
+    'rate_limit_per_minute' => (int) env('PSI_RATE_LIMIT_PER_MINUTE', 10),
     
     /*
     |--------------------------------------------------------------------------

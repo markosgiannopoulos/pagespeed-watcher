@@ -32,6 +32,16 @@ class WatcherUsageCommand extends Command
         $this->line("  Successful: {$todayUsage->requests_ok}");
         $this->line("  Errors: {$todayUsage->requests_error}");
         $this->line("  Cost Estimate: \${$todayUsage->cost_usd_estimate}");
+        
+        // Show progress percentage for daily usage
+        $dailyLimit = config('watcher.api_daily_limit', 25000);
+        $dailyPercentage = ($todayUsage->requests_total / $dailyLimit) * 100;
+        $this->line("  Progress: " . number_format($dailyPercentage, 1) . '%');
+        
+        if ($dailyPercentage > 80) {
+            $this->warn('  ⚠️  Daily limit nearly reached');
+        }
+        
         $this->line('');
 
         // Get last 7 days
@@ -56,6 +66,12 @@ class WatcherUsageCommand extends Command
 
         $this->line('');
 
+        // Rate limiting information
+        $this->line('Rate Limiting:');
+        $this->line('  Google PSI API has rate limits per minute');
+        $this->line('  If you encounter 429 errors, implement delays between requests');
+        $this->line('');
+
         // Show daily limit information
         $dailyLimit = config('watcher.api_daily_limit', 25000);
         $this->line("Daily Limit: {$dailyLimit} requests");
@@ -78,6 +94,11 @@ class WatcherUsageCommand extends Command
         if ($todayUsage && $todayUsage->cost_usd_estimate > 0) {
             $this->line('');
             $this->warn('Recommendation: Consider reducing test frequency to avoid costs');
+        }
+        
+        if ($todayUsage && $todayUsage->requests_total > 0) {
+            $this->line('');
+            $this->warn('Recommendation: Implement delays between requests to avoid rate limiting');
         }
 
         return self::SUCCESS;
