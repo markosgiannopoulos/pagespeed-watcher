@@ -16,15 +16,9 @@ class WatcherTestApiKeyCommand extends Command
 
     public function handle(PSIClientService $psiClient): int
     {
-        $apiKey = config('watcher.psi_api_key');
-        if (empty($apiKey)) {
-            $this->error('PSI_API_KEY is not set');
-            return self::FAILURE;
-        }
-
         $appUrl = $this->option('url');
         if (empty($appUrl)) {
-            $appUrl = config('app.url');
+            $appUrl = config('app.url') ?: env('APP_URL');
         }
         if (empty($appUrl)) {
             $this->error('APP_URL is not set');
@@ -45,37 +39,17 @@ class WatcherTestApiKeyCommand extends Command
 
         $this->line("Testing PSI connectivity for {$appUrl} ({$strategy})...");
 
-        try {
-            $response = $psiClient->runTest($appUrl, $strategy);
+        $result = $psiClient->testApiKey($appUrl, $strategy);
 
-            $metrics = $psiClient->extractCoreMetrics($response);
-            $scorePercent = isset($metrics['score']) ? (int) round($metrics['score'] * 100) : null;
-
-            $this->info('OK: PSI API reachable.');
-            if ($scorePercent !== null) {
-                $this->line("Score: {$scorePercent}%");
-                
-                // Provide performance feedback
-                if ($scorePercent >= 90) {
-                    $this->info('Performance: Excellent');
-                } elseif ($scorePercent >= 70) {
-                    $this->warn('Performance: Good');
-                } else {
-                    $this->error('Performance: Needs improvement');
-                }
+        if ($result['http_code'] === 200) {
+            $this->info("HTTP Code: {$result['http_code']}");
+            if ($result['score'] !== null) {
+                $this->line("Performance Score: {$result['score']}");
             }
-
             return self::SUCCESS;
-        } catch (\Throwable $e) {
-            $this->error('Error connecting to PSI API: ' . $e->getMessage());
-            
-            // Provide more specific error guidance
-            if (str_contains($e->getMessage(), 'API key')) {
-                $this->line('Please check your PSI_API_KEY configuration.');
-            } elseif (str_contains($e->getMessage(), 'quota')) {
-                $this->line('You may have exceeded your daily API quota.');
-            }
-            
+        } else {
+            $this->error("HTTP Code: {$result['http_code']}");
+            $this->error("Error: {$result['error']}");
             return self::FAILURE;
         }
     }

@@ -4,8 +4,12 @@ namespace Apogee\Watcher\Services;
 
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\ServerException;
 use InvalidArgumentException;
 use Apogee\Watcher\Services\RateLimitService;
+use Apogee\Watcher\Models\WatcherApiUsage;
+use Apogee\Watcher\Exceptions\MissingApiKeyException;
 
 class PSIClientService
 {
@@ -51,6 +55,11 @@ class PSIClientService
             throw new InvalidArgumentException('Strategy must be "mobile" or "desktop"');
         }
 
+        // Check if API key is configured
+        if (empty($this->apiKey)) {
+            throw new MissingApiKeyException();
+        }
+
         // Check rate limits before making request
         if (!$this->rateLimitService->canMakeRequest()) {
             throw new \RuntimeException('Rate limit exceeded. Please try again later.');
@@ -62,41 +71,66 @@ class PSIClientService
             'category' => 'performance',
         ];
 
-        if (!empty($this->apiKey)) {
-            $query['key'] = $this->apiKey;
-        }
+        $query['key'] = $this->apiKey;
 
-        $response = $this->httpClient->request('GET', self::PSI_ENDPOINT, [
-            'query' => $query,
-            'http_errors' => true,
-        ]);
+        try {
+            $response = $this->httpClient->request('GET', self::PSI_ENDPOINT, [
+                'query' => $query,
+                'http_errors' => true,
+            ]);
 
-        $json = json_decode((string) $response->getBody(), true);
-        if (!is_array($json)) {
-            throw new \RuntimeException('Invalid JSON from PSI API');
-        }
-
-        if (isset($json['error'])) {
-            $message = $json['error']['message'] ?? 'Unknown PSI API error';
-            $code = $json['error']['code'] ?? 0;
-            
-            // Provide more specific error messages
-            switch ($code) {
-                case 400:
-                    throw new \RuntimeException("Bad request: {$message}");
-                case 403:
-                    throw new \RuntimeException("API key error: {$message}");
-                case 429:
-                    throw new \RuntimeException("Rate limit exceeded: {$message}");
-                default:
-                    throw new \RuntimeException("PSI API error ({$code}): {$message}");
+            $json = json_decode((string) $response->getBody(), true);
+            if (!is_array($json)) {
+                throw new \RuntimeException('Invalid JSON from PSI API');
             }
+
+            if (isset($json['error'])) {
+                $message = $json['error']['message'] ?? 'Unknown PSI API error';
+                $code = $json['error']['code'] ?? 0;
+                
+                // Record error in usage tracking
+                WatcherApiUsage::getTodayRecord()->incrementRequests(false);
+                
+                // Provide more specific error messages
+                switch ($code) {
+                    case 400:
+                        throw new \RuntimeException("Bad request: {$message}");
+                    case 403:
+                        throw new \RuntimeException("API key error: {$message}");
+                    case 429:
+                        throw new \RuntimeException("quota exceeded or rate limited (429)");
+                    default:
+                        throw new \RuntimeException("PSI API error ({$code}): {$message}");
+                }
+            }
+
+            // Record successful request for rate limiting and usage tracking
+            $this->rateLimitService->recordRequest();
+            WatcherApiUsage::getTodayRecord()->incrementRequests(true);
+
+            return $json;
+        } catch (ClientException $e) {
+            $statusCode = $e->getResponse()->getStatusCode();
+            
+            // Record error in usage tracking
+            WatcherApiUsage::getTodayRecord()->incrementRequests(false);
+            
+            if ($statusCode === 429) {
+                throw new \RuntimeException('quota exceeded or rate limited (429)');
+            }
+            
+            throw new \RuntimeException("PSI API error ({$statusCode}): " . $e->getMessage());
+        } catch (ServerException $e) {
+            // Record error in usage tracking
+            WatcherApiUsage::getTodayRecord()->incrementRequests(false);
+            
+            throw new \RuntimeException('PSI server error (5xx) — retry later');
+        } catch (GuzzleException $e) {
+            // Record error in usage tracking
+            WatcherApiUsage::getTodayRecord()->incrementRequests(false);
+            
+            throw $e;
         }
-
-        // Record successful request for rate limiting
-        $this->rateLimitService->recordRequest();
-
-        return $json;
     }
 
     /**
@@ -156,5 +190,44 @@ class PSIClientService
         }
         
         return $insights;
+    }
+
+    /**
+     * Test API connectivity and return result.
+     *
+     * @param string $url
+     * @param string $strategy
+     * @return array
+     */
+    public function testApiKey(string $url, string $strategy = 'mobile'): array
+    {
+        try {
+            $response = $this->runTest($url, $strategy);
+            $metrics = $this->extractCoreMetrics($response);
+            $score = isset($metrics['score']) ? (int) round($metrics['score'] * 100) : null;
+            
+            return [
+                'http_code' => 200,
+                'score' => $score,
+                'error' => null,
+            ];
+        } catch (\Throwable $e) {
+            $httpCode = 500;
+            $error = $e->getMessage();
+            
+            if ($e instanceof MissingApiKeyException) {
+                $httpCode = 401;
+            } elseif (str_contains($error, '429')) {
+                $httpCode = 429;
+            } elseif (str_contains($error, '5xx')) {
+                $httpCode = 502;
+            }
+            
+            return [
+                'http_code' => $httpCode,
+                'score' => null,
+                'error' => $error,
+            ];
+        }
     }
 }

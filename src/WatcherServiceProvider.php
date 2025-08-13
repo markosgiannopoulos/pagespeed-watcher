@@ -15,11 +15,9 @@ class WatcherServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__ . '/../config/watcher.php', 'watcher');
 
         $this->app->singleton(PSIClientService::class, function ($app) {
-            $config = config('watcher.http_client', []);
-            
             $guzzle = new GuzzleClient([
-                'timeout' => $config['timeout'] ?? 120,
-                'connect_timeout' => $config['connect_timeout'] ?? 15,
+                'timeout' => 120,
+                'connect_timeout' => 15,
                 'headers' => [
                     'User-Agent' => 'Laravel-PageSpeed-Watcher/1.0',
                 ],
@@ -51,31 +49,5 @@ class WatcherServiceProvider extends ServiceProvider
 
         // Load migrations from package
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
-        
-        // Validate configuration
-        $this->validateConfiguration();
-    }
-    
-    /**
-     * Validate the package configuration.
-     */
-    private function validateConfiguration(): void
-    {
-        $config = config('watcher');
-        
-        if (empty($config['psi_api_key'])) {
-            // Log warning but don't fail - API key might be set later
-            if (app()->runningInConsole()) {
-                $this->app['log']->warning('PageSpeed Watcher: PSI_API_KEY not configured');
-            }
-        }
-        
-        // Validate thresholds
-        $thresholds = $config['thresholds'] ?? [];
-        if (isset($thresholds['excellent']) && isset($thresholds['good']) && isset($thresholds['needs_improvement'])) {
-            if ($thresholds['excellent'] <= $thresholds['good'] || $thresholds['good'] <= $thresholds['needs_improvement']) {
-                throw new \InvalidArgumentException('Invalid performance thresholds configuration');
-            }
-        }
     }
 }

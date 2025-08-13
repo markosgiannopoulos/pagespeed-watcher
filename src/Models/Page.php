@@ -22,8 +22,8 @@ class Page extends Model
     protected $attributes = [
         'active' => true,
         'mobile_enabled' => true,
-        'desktop_enabled' => true,
-        'priority' => 0,
+        'desktop_enabled' => false,
+        'priority' => 5,
         'auto_discovered' => false,
     ];
 

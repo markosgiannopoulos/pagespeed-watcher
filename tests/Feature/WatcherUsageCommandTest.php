@@ -1,0 +1,82 @@
+<?php
+
+namespace Apogee\Watcher\Tests\Feature;
+
+use Apogee\Watcher\Models\WatcherApiUsage;
+use Orchestra\Testbench\TestCase;
+use Apogee\Watcher\WatcherServiceProvider;
+use Carbon\Carbon;
+
+class WatcherUsageCommandTest extends TestCase
+{
+    protected function getPackageProviders($app)
+    {
+        /** @SuppressWarnings("UnusedFormalParameter") */
+        return [WatcherServiceProvider::class];
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        
+        // Run migrations
+        $this->loadLaravelMigrations();
+    }
+
+    public function test_command_shows_no_usage_when_empty(): void
+    {
+        $this->artisan('watcher:usage')
+            ->expectsOutputToContain('No usage recorded yet.')
+            ->assertExitCode(0);
+    }
+
+    public function test_command_shows_today_usage(): void
+    {
+        // Create today's usage record
+        WatcherApiUsage::create([
+            'date' => Carbon::today(),
+            'requests_total' => 10,
+            'requests_ok' => 8,
+            'requests_error' => 2,
+            'cost_usd_estimate' => 0.004,
+        ]);
+
+        $this->artisan('watcher:usage')
+            ->expectsOutputToContain('Today:')
+            ->expectsOutputToContain('Total Requests: 10')
+            ->expectsOutputToContain('Successful: 8')
+            ->expectsOutputToContain('Errors: 2')
+            ->expectsOutputToContain('Cost Estimate: $0.004')
+            ->assertExitCode(0);
+    }
+
+    public function test_command_shows_last_7_days(): void
+    {
+        // Create usage records for today and yesterday
+        WatcherApiUsage::create([
+            'date' => Carbon::today(),
+            'requests_total' => 10,
+            'requests_ok' => 8,
+            'requests_error' => 2,
+            'cost_usd_estimate' => 0.004,
+        ]);
+
+        WatcherApiUsage::create([
+            'date' => Carbon::yesterday(),
+            'requests_total' => 15,
+            'requests_ok' => 12,
+            'requests_error' => 3,
+            'cost_usd_estimate' => 0.006,
+        ]);
+
+        $this->artisan('watcher:usage')
+            ->expectsOutputToContain('Today:')
+            ->expectsOutputToContain('Total Requests: 10')
+            ->expectsOutputToContain('Last 7 Days:')
+            ->expectsOutputToContain('Total Requests: 25')
+            ->expectsOutputToContain('Successful: 20')
+            ->expectsOutputToContain('Errors: 5')
+            ->expectsOutputToContain('Total Cost Estimate: $0.010')
+            ->assertExitCode(0);
+    }
+}

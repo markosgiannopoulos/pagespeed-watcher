@@ -1,54 +1,55 @@
 # PageSpeed Watcher for Laravel
 
-Open-source package to run Google PageSpeed Insights (PSI) checks for your Laravel app pages. Phase 0/1 focuses on package skeleton, config, schema, and one CLI command to validate your PSI API key.
+Open-source package to run Google PageSpeed Insights (PSI) checks for your Laravel app pages. Phase 1 focuses on package skeleton, config, schema, PSI client robustness, and CLI commands for API validation and usage tracking.
 
-## Install
+## Quick Start
 
 ```bash
+# Install the package
 composer require apogee/laravel-pagespeed-watcher
-```
 
-Laravel auto-discovers the service provider. Optionally publish config and migrations:
-
-```bash
+# Publish configuration and migrations
 php artisan vendor:publish --tag=watcher-config
 php artisan vendor:publish --tag=watcher-migrations
-```
 
-Run migrations:
-
-```bash
+# Run migrations
 php artisan migrate
+
+# Test your API key
+php artisan watcher:test-api-key
+
+# Check usage statistics
+php artisan watcher:usage
 ```
 
-## Configure
+## Configuration
 
 Set your PSI API key and optional defaults in `.env`:
 
-```env
-PSI_API_KEY=your_key_here
-API_DAILY_LIMIT=25000
-DEFAULT_TIMEZONE=Europe/Luxembourg
-DAILY_TEST_TIME=07:00
-DISCOVERY_MAX_URLS=100
-DISCOVERY_MAX_DEPTH=3
-```
+| Environment Variable | Default | Description |
+|---------------------|---------|-------------|
+| `PSI_API_KEY` | - | Your Google PageSpeed Insights API key |
+| `API_DAILY_LIMIT` | 25000 | Daily API request limit |
+| `DEFAULT_TIMEZONE` | Europe/Luxembourg | Default timezone for scheduling |
+| `DAILY_TEST_TIME` | 07:00 | Time to run daily tests |
+| `DISCOVERY_MAX_URLS` | 100 | Maximum URLs to discover |
+| `DISCOVERY_MAX_DEPTH` | 3 | Maximum depth for URL discovery |
 
-## Test your setup
+## Commands
+
+### Test API Key
+
+Validate connectivity to Google PageSpeed Insights:
 
 ```bash
 php artisan watcher:test-api-key
 ```
 
-The command calls PSI for your `APP_URL` using the configured key, printing status and a performance score if available.
+Options:
+- `--strategy=mobile|desktop` (default: mobile)
+- `--url=<url>` (default: APP_URL)
 
-You can also test with desktop strategy:
-
-```bash
-php artisan watcher:test-api-key --strategy=desktop
-```
-
-## Check API usage
+### Check Usage
 
 Monitor your PageSpeed Insights API usage:
 
@@ -56,11 +57,22 @@ Monitor your PageSpeed Insights API usage:
 php artisan watcher:usage
 ```
 
-This shows daily and per-minute usage statistics with recommendations.
+Shows today's usage and last 7 days totals with cost estimates.
 
-> Note: The OSS package is CLI-only at this stage. Scheduling guidance for your app's `App\\Console\\Kernel` will come later.
+## Database Schema
 
-Learn more: [Google PageSpeed Insights API](https://developers.google.com/speed/docs/insights/v5/get-started) (API keys, quotas, and usage)
+The package creates these tables:
+
+- **`watcher_pages`**: Pages to monitor
+- **`watcher_test_results`**: PSI test results
+- **`watcher_settings`**: Key-value settings storage
+- **`watcher_api_usage`**: Daily API usage tracking
+
+## Cost Estimation
+
+The package tracks API usage and estimates costs for requests exceeding your daily limit:
+- Cost calculation: `max(0, requests_total - daily_limit) * 0.002`
+- Usage is tracked per day with success/error counts
 
 ## License
 

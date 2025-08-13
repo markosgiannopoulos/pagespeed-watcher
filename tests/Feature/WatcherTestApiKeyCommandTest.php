@@ -24,18 +24,11 @@ class WatcherTestApiKeyCommandTest extends TestCase
     {
         $fake = new class(new \GuzzleHttp\Client(), 'test_key') extends PSIClientService {
             public function __construct($client, $key) { parent::__construct($client, $key); }
-            public function runTest(string $url, string $strategy = 'mobile'): array {
+            public function testApiKey(string $url, string $strategy = 'mobile'): array {
                 return [
-                    'lighthouseResult' => [
-                        'categories' => [
-                            'performance' => ['score' => 0.91],
-                        ],
-                        'audits' => [
-                            'largest-contentful-paint' => ['numericValue' => 1800],
-                            'interaction-to-next-paint' => ['numericValue' => 120],
-                            'cumulative-layout-shift' => ['numericValue' => 0.03],
-                        ],
-                    ],
+                    'http_code' => 200,
+                    'score' => 91,
+                    'error' => null,
                 ];
             }
         };
@@ -43,9 +36,8 @@ class WatcherTestApiKeyCommandTest extends TestCase
         $this->app->instance(PSIClientService::class, $fake);
 
         $this->artisan('watcher:test-api-key')
-            ->expectsOutputToContain('OK: PSI API reachable.')
-            ->expectsOutputToContain('Score: 91%')
-            ->expectsOutputToContain('Performance: Excellent')
+            ->expectsOutputToContain('HTTP Code: 200')
+            ->expectsOutputToContain('Performance Score: 91')
             ->assertExitCode(0);
     }
 
@@ -54,18 +46,11 @@ class WatcherTestApiKeyCommandTest extends TestCase
         $fake = new class(new \GuzzleHttp\Client(), 'test_key') extends PSIClientService {
             public function __construct($client, $key) { parent::__construct($client, $key); }
             /** @SuppressWarnings("UnusedFormalParameter") */
-            public function runTest(string $url, string $strategy = 'mobile'): array {
+            public function testApiKey(string $url, string $strategy = 'mobile'): array {
                 return [
-                    'lighthouseResult' => [
-                        'categories' => [
-                            'performance' => ['score' => 0.75],
-                        ],
-                        'audits' => [
-                            'largest-contentful-paint' => ['numericValue' => 2200],
-                            'interaction-to-next-paint' => ['numericValue' => 150],
-                            'cumulative-layout-shift' => ['numericValue' => 0.05],
-                        ],
-                    ],
+                    'http_code' => 200,
+                    'score' => 75,
+                    'error' => null,
                 ];
             }
         };
@@ -74,37 +59,8 @@ class WatcherTestApiKeyCommandTest extends TestCase
 
         $this->artisan('watcher:test-api-key', ['--strategy' => 'desktop'])
             ->expectsOutputToContain('Testing PSI connectivity for https://example.com (desktop)')
-            ->expectsOutputToContain('Score: 75%')
-            ->expectsOutputToContain('Performance: Good')
-            ->assertExitCode(0);
-    }
-
-    public function test_command_with_poor_performance(): void
-    {
-        $fake = new class(new \GuzzleHttp\Client(), 'test_key') extends PSIClientService {
-            public function __construct($client, $key) { parent::__construct($client, $key); }
-            /** @SuppressWarnings("UnusedFormalParameter") */
-            public function runTest(string $url, string $strategy = 'mobile'): array {
-                return [
-                    'lighthouseResult' => [
-                        'categories' => [
-                            'performance' => ['score' => 0.45],
-                        ],
-                        'audits' => [
-                            'largest-contentful-paint' => ['numericValue' => 3500],
-                            'interaction-to-next-paint' => ['numericValue' => 300],
-                            'cumulative-layout-shift' => ['numericValue' => 0.15],
-                        ],
-                    ],
-                ];
-            }
-        };
-
-        $this->app->instance(PSIClientService::class, $fake);
-
-        $this->artisan('watcher:test-api-key')
-            ->expectsOutputToContain('Score: 45%')
-            ->expectsOutputToContain('Performance: Needs improvement')
+            ->expectsOutputToContain('HTTP Code: 200')
+            ->expectsOutputToContain('Performance Score: 75')
             ->assertExitCode(0);
     }
 
@@ -112,8 +68,23 @@ class WatcherTestApiKeyCommandTest extends TestCase
     {
         $this->app['config']->set('watcher.psi_api_key', null);
 
+        $fake = new class(new \GuzzleHttp\Client(), null) extends PSIClientService {
+            public function __construct($client, $key) { parent::__construct($client, $key); }
+            /** @SuppressWarnings("UnusedFormalParameter") */
+            public function testApiKey(string $url, string $strategy = 'mobile'): array {
+                return [
+                    'http_code' => 401,
+                    'score' => null,
+                    'error' => 'PSI API key is not configured',
+                ];
+            }
+        };
+
+        $this->app->instance(PSIClientService::class, $fake);
+
         $this->artisan('watcher:test-api-key')
-            ->expectsOutputToContain('PSI_API_KEY is not set')
+            ->expectsOutputToContain('HTTP Code: 401')
+            ->expectsOutputToContain('Error: PSI API key is not configured')
             ->assertExitCode(1);
     }
 
@@ -137,21 +108,47 @@ class WatcherTestApiKeyCommandTest extends TestCase
             ->assertExitCode(1);
     }
 
-    public function test_command_with_api_error(): void
+    public function test_command_with_rate_limit_error(): void
     {
         $fake = new class(new \GuzzleHttp\Client(), 'test_key') extends PSIClientService {
             public function __construct($client, $key) { parent::__construct($client, $key); }
             /** @SuppressWarnings("UnusedFormalParameter") */
-            public function runTest(string $url, string $strategy = 'mobile'): array {
-                throw new \RuntimeException('API key error: Invalid API key');
+            public function testApiKey(string $url, string $strategy = 'mobile'): array {
+                return [
+                    'http_code' => 429,
+                    'score' => null,
+                    'error' => 'quota exceeded or rate limited (429)',
+                ];
             }
         };
 
         $this->app->instance(PSIClientService::class, $fake);
 
         $this->artisan('watcher:test-api-key')
-            ->expectsOutputToContain('Error connecting to PSI API')
-            ->expectsOutputToContain('Please check your PSI_API_KEY configuration')
+            ->expectsOutputToContain('HTTP Code: 429')
+            ->expectsOutputToContain('Error: quota exceeded or rate limited (429)')
+            ->assertExitCode(1);
+    }
+
+    public function test_command_with_server_error(): void
+    {
+        $fake = new class(new \GuzzleHttp\Client(), 'test_key') extends PSIClientService {
+            public function __construct($client, $key) { parent::__construct($client, $key); }
+            /** @SuppressWarnings("UnusedFormalParameter") */
+            public function testApiKey(string $url, string $strategy = 'mobile'): array {
+                return [
+                    'http_code' => 502,
+                    'score' => null,
+                    'error' => 'PSI server error (5xx) — retry later',
+                ];
+            }
+        };
+
+        $this->app->instance(PSIClientService::class, $fake);
+
+        $this->artisan('watcher:test-api-key')
+            ->expectsOutputToContain('HTTP Code: 502')
+            ->expectsOutputToContain('Error: PSI server error (5xx) — retry later')
             ->assertExitCode(1);
     }
 }
