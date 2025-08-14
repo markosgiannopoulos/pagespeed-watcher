@@ -15,8 +15,8 @@ php artisan vendor:publish --tag=watcher-migrations
 # Run migrations
 php artisan migrate
 
-# Test your API key
-php artisan watcher:test-api-key
+# Test a page's performance
+php artisan watcher:test-page
 
 # Check usage statistics
 php artisan watcher:usage
@@ -47,12 +47,12 @@ Set your PSI API key and optional defaults in `.env`:
 
 ## Commands
 
-### Test API Key
+### Test Page Performance
 
-Validate connectivity to Google PageSpeed Insights:
+Run a PageSpeed Insights test to validate API connectivity and analyze page performance:
 
 ```bash
-php artisan watcher:test-api-key
+php artisan watcher:test-page
 ```
 
 Options:

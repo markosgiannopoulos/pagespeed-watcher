@@ -6,20 +6,20 @@ use Illuminate\Console\Command;
 use Apogee\Watcher\Services\PSIClientService;
 use RuntimeException;
 
-class WatcherTestApiKeyCommand extends Command
+class WatcherTestPageCommand extends Command
 {
-    protected $signature = 'watcher:test-api-key
+    protected $signature = 'watcher:test-page
         {--strategy=mobile : Strategy to test: mobile or desktop}
         {--url= : URL to test (defaults to app.url)}';
 
-    protected $description = 'Validate connectivity to Google PageSpeed Insights using the configured API key.';
+    protected $description = 'Run a PageSpeed Insights test to validate API connectivity and analyze page performance.';
 
     /**
      * Execute the console command.
      * 
-     * Tests connectivity to Google PageSpeed Insights API using the configured
-     * API key. Validates the API key, makes a test request, and displays
-     * the results including performance score and any errors.
+     * Runs a PageSpeed Insights test for the specified URL using the configured
+     * API key. Validates connectivity, performs a full performance analysis,
+     * and displays the results including performance score and any errors.
      * 
      * @param PSIClientService $psiClient The PSI client service for making API requests
      * @return int Command exit code (0 for success, 1 for failure)
@@ -49,7 +49,7 @@ class WatcherTestApiKeyCommand extends Command
 
         $this->line("Testing PSI connectivity for {$appUrl} ({$strategy})...");
 
-        $result = $psiClient->testApiKey($appUrl, $strategy);
+        $result = $psiClient->testPage($appUrl, $strategy);
 
         if ($result['http_code'] === 200) {
             $this->info("HTTP Code: {$result['http_code']}");
