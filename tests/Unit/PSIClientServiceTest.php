@@ -122,7 +122,7 @@ class PSIClientServiceTest extends TestCase
 
         $this->assertEquals(429, $result['http_code']);
         $this->assertNull($result['score']);
-        $this->assertStringContains('429', $result['error']);
+        $this->assertStringContainsString('429', $result['error']);
     }
 
     /**
@@ -150,7 +150,7 @@ class PSIClientServiceTest extends TestCase
 
         $this->assertEquals(502, $result['http_code']);
         $this->assertNull($result['score']);
-        $this->assertStringContains('5xx', $result['error']);
+        $this->assertStringContainsString('5xx', $result['error']);
     }
 
     /**
@@ -178,6 +178,6 @@ class PSIClientServiceTest extends TestCase
 
         $this->assertEquals(400, $result['http_code']);
         $this->assertNull($result['score']);
-        $this->assertStringContains('Invalid URL format', $result['error']);
+        $this->assertStringContainsString('Invalid URL format', $result['error']);
     }
 }

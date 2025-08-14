@@ -273,8 +273,8 @@ class WatcherTestPageCommandTest extends TestCase
      */
     public function test_command_with_missing_app_url(): void
     {
-        // Clear APP_URL configuration
-        config(['app.url' => null]);
+        // Override the app configuration to remove URL
+        $this->app['config']->set('app.url', null);
         
         // Execute command expecting failure
         $this->artisan('watcher:test-page')
