@@ -1,8 +1,8 @@
 <?php
 
-namespace Tests\Feature;
+namespace Apogee\Watcher\Tests\Feature;
 
-use Tests\TestCase;
+use Orchestra\Testbench\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Apogee\Watcher\Services\PSIClientService;
 
@@ -16,19 +16,31 @@ class WatcherTestPageCommandTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected function setUp(): void
+    /**
+     * Get the package providers for testing.
+     * 
+     * @param mixed $app The application instance
+     * @return array Array of service provider classes
+     */
+    protected function getPackageProviders($app)
     {
-        parent::setUp();
-        
-        // Set required configuration
-        config(['app.url' => 'https://example.com']);
-        config(['watcher.api_daily_limit' => 25000]);
-        config(['watcher.psi_cost_per_request' => 0.002]);
-        config(['watcher.thresholds.excellent' => 90]);
-        config(['watcher.thresholds.good' => 70]);
-        
-        // Run the watcher migrations
-        $this->artisan('migrate', ['--database' => 'testing']);
+        return [\Apogee\Watcher\WatcherServiceProvider::class];
+    }
+
+    /**
+     * Define the test environment.
+     * 
+     * Sets up the test environment with required configuration values.
+     * 
+     * @param mixed $app The application instance
+     */
+    protected function defineEnvironment($app)
+    {
+        $app['config']->set('app.url', 'https://example.com');
+        $app['config']->set('watcher.api_daily_limit', 25000);
+        $app['config']->set('watcher.psi_cost_per_request', 0.002);
+        $app['config']->set('watcher.thresholds.excellent', 90);
+        $app['config']->set('watcher.thresholds.good', 70);
     }
 
     /**

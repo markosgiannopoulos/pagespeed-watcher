@@ -1,8 +1,8 @@
 <?php
 
-namespace Tests\Unit;
+namespace Apogee\Watcher\Tests\Unit;
 
-use Tests\TestCase;
+use Orchestra\Testbench\TestCase;
 use Apogee\Watcher\Services\PSIClientService;
 use Apogee\Watcher\Services\RateLimitService;
 use Apogee\Watcher\Exceptions\MissingApiKeyException;
@@ -10,13 +10,28 @@ use GuzzleHttp\Client as GuzzleClient;
 
 class PSIClientServiceTest extends TestCase
 {
-    protected function setUp(): void
+    /**
+     * Get the package providers for testing.
+     * 
+     * @param mixed $app The application instance
+     * @return array Array of service provider classes
+     */
+    protected function getPackageProviders($app)
     {
-        parent::setUp();
-        
-        // Set required configuration
-        config(['watcher.api_daily_limit' => 25000]);
-        config(['watcher.psi_cost_per_request' => 0.002]);
+        return [\Apogee\Watcher\WatcherServiceProvider::class];
+    }
+
+    /**
+     * Define the test environment.
+     * 
+     * Sets up the test environment with required configuration values.
+     * 
+     * @param mixed $app The application instance
+     */
+    protected function defineEnvironment($app)
+    {
+        $app['config']->set('watcher.api_daily_limit', 25000);
+        $app['config']->set('watcher.psi_cost_per_request', 0.002);
     }
 
     /**
