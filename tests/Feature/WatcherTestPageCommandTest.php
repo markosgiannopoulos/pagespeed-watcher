@@ -5,6 +5,7 @@ namespace Apogee\Watcher\Tests\Feature;
 use Orchestra\Testbench\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Apogee\Watcher\Services\PSIClientService;
+use Apogee\Watcher\WatcherServiceProvider;
 
 /**
  * Feature tests for the watcher:test-page command.
@@ -24,7 +25,7 @@ class WatcherTestPageCommandTest extends TestCase
      */
     protected function getPackageProviders($app)
     {
-        return [\Apogee\Watcher\WatcherServiceProvider::class];
+        return [WatcherServiceProvider::class];
     }
 
     /**

@@ -6,6 +6,7 @@ use Orchestra\Testbench\TestCase;
 use Apogee\Watcher\Services\PSIClientService;
 use Apogee\Watcher\Services\RateLimitService;
 use Apogee\Watcher\Exceptions\MissingApiKeyException;
+use Apogee\Watcher\WatcherServiceProvider;
 use GuzzleHttp\Client as GuzzleClient;
 
 class PSIClientServiceTest extends TestCase
@@ -18,7 +19,7 @@ class PSIClientServiceTest extends TestCase
      */
     protected function getPackageProviders($app)
     {
-        return [\Apogee\Watcher\WatcherServiceProvider::class];
+        return [WatcherServiceProvider::class];
     }
 
     /**
