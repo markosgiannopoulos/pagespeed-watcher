@@ -269,16 +269,16 @@ class WatcherTestPageCommandTest extends TestCase
     }
 
     /**
-     * Test command with missing APP_URL configuration.
+     * Test command with invalid APP_URL configuration.
      */
-    public function test_command_with_missing_app_url(): void
+    public function test_command_with_invalid_app_url(): void
     {
-        // Override the app configuration to remove URL
-        $this->app['config']->set('app.url', null);
+        // Set an invalid URL format to test URL validation
+        $this->app['config']->set('app.url', 'invalid-url');
         
         // Execute command expecting failure
         $this->artisan('watcher:test-page')
-            ->expectsOutput('APP_URL is not set')
+            ->expectsOutput('Invalid APP_URL format. Please provide a valid URL.')
             ->assertExitCode(1);
     }
 
