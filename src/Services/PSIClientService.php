@@ -226,17 +226,17 @@ class PSIClientService
     }
 
     /**
-     * Test API connectivity and validate the configured API key.
+     * Test a page's performance using PageSpeed Insights.
      * 
-     * Performs a test request to the PageSpeed Insights API and returns
+     * Performs a PageSpeed Insights test for the specified URL and returns
      * a structured result with HTTP status, performance score, and any errors.
-     * This method is used by the CLI command to validate API configuration.
+     * This method is used by the CLI command to test page performance.
      *
      * @param string $url The URL to test (must be a valid HTTP/HTTPS URL)
      * @param string $strategy The testing strategy: "mobile" or "desktop"
      * @return array Result array with keys: http_code, score, error
      */
-    public function testApiKey(string $url, string $strategy = 'mobile'): array
+    public function testPage(string $url, string $strategy = 'mobile'): array
     {
         try {
             $response = $this->runTest($url, $strategy);

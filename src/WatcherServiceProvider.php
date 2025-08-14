@@ -3,7 +3,7 @@
 namespace Apogee\Watcher;
 
 use Illuminate\Support\ServiceProvider;
-use Apogee\Watcher\Console\Commands\WatcherTestApiKeyCommand;
+use Apogee\Watcher\Console\Commands\WatcherTestPageCommand;
 use Apogee\Watcher\Console\Commands\WatcherUsageCommand;
 use Apogee\Watcher\Services\PSIClientService;
 use Apogee\Watcher\Services\RateLimitService;
@@ -65,7 +65,7 @@ class WatcherServiceProvider extends ServiceProvider
         // Register commands only when running in console
         if ($this->app->runningInConsole()) {
             $this->commands([
-                WatcherTestApiKeyCommand::class,
+                WatcherTestPageCommand::class,
                 WatcherUsageCommand::class,
             ]);
         }
